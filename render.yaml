@@ -1,0 +1,31 @@
+databases:
+  - name: vision-db
+    databaseName: vision
+    plan: free
+    postgresMajorVersion: 16
+
+services:
+  - type: web
+    name: vision
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --workers 3 --threads 4 --timeout 120"
+    healthCheckPath: /login
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vision-db
+          property: connectionString
+      - key: VISION_SECRET_KEY
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+      - key: PYTHON_VERSION
+        value: 3.11.9
+    disk:
+      name: vision-uploads
+      mountPath: /opt/render/project/src/static/uploads
+      sizeGB: 1

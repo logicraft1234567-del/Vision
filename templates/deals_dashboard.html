@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deal Room — Vision</title>
+<link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/deal-room.css') }}">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="loader-orb"></div></div>
+{% from "_icons.html" import icon %}
+{% from "_sidebar.html" import sidebar %}
+{% from "_topbar.html" import topbar with context %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-stack">
+    {% for category, message in messages %}<div class="flash {{ category }}"><span>{{ message }}</span></div>{% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="dash-shell">
+  {{ sidebar(current_user.role, 'deals') }}
+
+  <main class="dash-main">
+    {{ topbar(url_for('browse_projects')) }}
+
+    <div class="welcome-block">
+      <h2>{{ icon('briefcase', 'icon icon-sm') }} Deal Room</h2>
+      <p>Every offer, negotiation, and signed agreement you're part of — {{ total_count }} deal{{ 's' if total_count != 1 else '' }} total.</p>
+    </div>
+
+    <form method="get" action="{{ url_for('deals_dashboard') }}" class="filter-row" style="flex-wrap:wrap; gap:10px;">
+      <input class="field-input" type="text" name="q" value="{{ q }}" placeholder="Search by startup, investor, or company…" style="max-width:280px;">
+      <select name="status" class="field-input" style="max-width:180px;" onchange="this.form.submit()">
+        <option value="">All Statuses</option>
+        {% for s in statuses %}
+          <option value="{{ s }}" {{ 'selected' if status_filter == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <select name="deal_type" class="field-input" style="max-width:220px;" onchange="this.form.submit()">
+        <option value="">All Deal Types</option>
+        {% for key, (label, category) in deal_types.items() %}
+          <option value="{{ key }}" {{ 'selected' if type_filter == key }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-outline btn-sm">Filter</button>
+      {% if q or status_filter or type_filter %}
+        <a href="{{ url_for('deals_dashboard') }}" class="btn btn-ghost btn-sm">Clear</a>
+      {% endif %}
+    </form>
+
+    {% if total_count == 0 %}
+      <div class="glass empty-state" style="margin-top:20px;">
+        <div class="icon-badge">{{ icon('briefcase', 'icon icon-lg') }}</div>
+        <h4>No deals yet</h4>
+        <p>Open any conversation and use the Deal Room tab to draft your first AI contract.</p>
+        <a href="{{ url_for('messages_page') }}" class="btn btn-primary btn-sm">Go to Messages</a>
+      </div>
+    {% endif %}
+
+    {% for group_name, group_deals in groups %}
+      {% if group_deals %}
+        <div class="panel-head" style="margin-top:32px;">
+          <h3>{{ group_name }} <span style="color:var(--muted); font-weight:500;">({{ group_deals|length }})</span></h3>
+        </div>
+        <div class="deal-dash-grid">
+          {% for deal in group_deals %}
+            <a href="{{ url_for('view_conversation', conversation_id=deal.conversation_id) }}" class="glass deal-dash-card">
+              <div class="deal-dash-card-top">
+                <span class="deal-dash-type">{{ deal.deal_type_label }}</span>
+                <span class="dr-status-pill dr-status-{{ deal.status }}">{{ deal.status }}</span>
+              </div>
+              <div class="deal-dash-title">{{ deal.title }}</div>
+              <div class="deal-dash-meta">
+                {{ deal.startup_name or '—' }} &middot; {{ deal.other_party_name or '—' }}
+              </div>
+              <div class="deal-dash-bottom">
+                <span>
+                  {% if deal.investment_amount %}{{ deal.currency }} {{ '{:,.0f}'.format(deal.investment_amount) }}{% endif %}
+                  {% if deal.equity_percentage %} &middot; {{ deal.equity_percentage }}% equity{% endif %}
+                </span>
+                <span>V{{ deal.current_version_number }}</span>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </main>
+</div>
+
+<nav class="bottom-nav">
+  <a href="{{ url_for(current_user.role + '_dashboard') }}">{{ icon('grid', 'icon icon-sm') }} Home</a>
+  <a href="{{ url_for('browse_projects') }}">{{ icon('compass', 'icon icon-sm') }} Browse</a>
+  <a href="{{ url_for('deals_dashboard') }}" class="active">{{ icon('briefcase', 'icon icon-sm') }} Deals</a>
+  <a href="{{ url_for('messages_page') }}">{{ icon('message', 'icon icon-sm') }} Messages</a>
+  <a href="{{ url_for('profile_page') }}">{{ icon('user', 'icon icon-sm') }} Profile</a>
+</nav>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

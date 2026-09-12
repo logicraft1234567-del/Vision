@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Understanding Badges — Vision</title>
+<link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="loader-orb"></div></div>
+{% from "_icons.html" import icon %}
+{% from "_sidebar.html" import sidebar %}
+{% from "_topbar.html" import topbar with context %}
+{% from "_modals.html" import user_search_modal, user_profile_modal, settings_modal %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-stack">
+    {% for category, message in messages %}<div class="flash {{ category }}"><span>{{ message }}</span></div>{% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="dash-shell">
+  {{ sidebar(current_user.role, 'help') }}
+
+  <main class="dash-main">
+    {{ topbar(url_for('browse_projects')) }}
+
+    <div class="welcome-block">
+      <h2>{{ icon('help-circle', 'icon icon-sm') }} Understanding Badges</h2>
+      <p>Every member of Vision carries a reputation badge next to their name. It's earned automatically from real activity — no one can buy or fake it. Here's how each one is earned.</p>
+    </div>
+
+    <div class="badge-guide-grid">
+
+      <div class="glass badge-guide-card">
+        <div class="badge-guide-head">
+          <div class="icon-badge">{{ icon('crown', 'icon icon-sm') }}</div>
+          <div>
+            <h4>Builders</h4>
+            <p>Ranked by total likes across all published projects.</p>
+          </div>
+        </div>
+        {% for row in badge_data.builder %}
+        <div class="badge-guide-row">
+          <span class="reputation-badge" style="--rep-color: {{ row.color }};">{{ icon(row.icon, 'reputation-icon') }}</span>
+          <div class="badge-guide-row-text">
+            <div class="badge-guide-rank">{{ row.rank }}</div>
+            <div class="badge-guide-req">{{ row.requirement }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="glass badge-guide-card">
+        <div class="badge-guide-head">
+          <div class="icon-badge">{{ icon('plane', 'icon icon-sm') }}</div>
+          <div>
+            <h4>Investors</h4>
+            <p>Ranked by engagement and real collaboration/funding milestones.</p>
+          </div>
+        </div>
+        {% for row in badge_data.investor %}
+        <div class="badge-guide-row">
+          <span class="reputation-badge" style="--rep-color: {{ row.color }};">{{ icon(row.icon, 'reputation-icon') }}</span>
+          <div class="badge-guide-row-text">
+            <div class="badge-guide-rank">{{ row.rank }}</div>
+            <div class="badge-guide-req">{{ row.requirement }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="glass badge-guide-card">
+        <div class="badge-guide-head">
+          <div class="icon-badge">{{ icon('briefcase', 'icon icon-sm') }}</div>
+          <div>
+            <h4>Companies</h4>
+            <p>Ranked by company points and verified partnerships.</p>
+          </div>
+        </div>
+        {% for row in badge_data.company %}
+        <div class="badge-guide-row">
+          <span class="reputation-badge" style="--rep-color: {{ row.color }};">
+            <span class="reputation-letter {{ 'filled' if row.filled }}">{{ row.letter }}</span>
+          </span>
+          <div class="badge-guide-row-text">
+            <div class="badge-guide-rank">{{ row.rank }}</div>
+            <div class="badge-guide-req">{{ row.requirement }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<nav class="bottom-nav">
+  <a href="{{ url_for(current_user.role + '_dashboard') }}">{{ icon('grid', 'icon icon-sm') }} Home</a>
+  <a href="{{ url_for('browse_projects') }}">{{ icon('compass', 'icon icon-sm') }} Browse</a>
+  <a href="{{ url_for('saved_projects') }}">{{ icon('bookmark', 'icon icon-sm') }} Saved</a>
+  <a href="{{ url_for('messages_page') }}">{{ icon('message', 'icon icon-sm') }} Messages</a>
+  <a href="{{ url_for('profile_page') }}">{{ icon('user', 'icon icon-sm') }} Profile</a>
+</nav>
+
+{{ user_search_modal() }}
+{{ user_profile_modal() }}
+{{ settings_modal(current_user) }}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

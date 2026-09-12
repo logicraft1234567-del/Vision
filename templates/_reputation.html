@@ -1,0 +1,59 @@
+{% from "_icons.html" import icon %}
+
+{#
+  Renders the reputation badge for a user, right next to their username.
+  Replaces the old red role pill ([BUILDER]/[INVESTOR]/[COMPANY]) with a
+  premium reputation icon that reflects the user's actual standing.
+
+  Usage: {{ reputation_badge(user) }}
+  `cls` lets callers add extra wrapper classes (e.g. for spacing tweaks).
+#}
+{% macro reputation_badge(user, cls='') %}
+{%- if user and user.reputation -%}
+  {%- set rep = user.reputation -%}
+  <span class="reputation-badge {{ cls }}" style="--rep-color: {{ rep.color }};" title="{{ rep.label }}">
+    {%- if rep.kind == 'letter' -%}
+      <span class="reputation-letter {{ 'filled' if rep.filled }}">{{ rep.letter }}</span>
+    {%- else -%}
+      {{ icon(rep.icon, 'reputation-icon') }}
+    {%- endif -%}
+  </span>
+{%- endif -%}
+{% endmacro %}
+
+{#
+  Small colored monogram chips for a user's known programming languages —
+  meant to sit right next to reputation_badge(). Builder + investor only
+  (companies don't have a languages field, so `languages` will just be
+  empty for them and this renders nothing).
+
+  Usage: {{ language_badges(profile_data.languages) }}
+  Each item in `languages` is {name, color, abbr} — see LANGUAGE_LOOKUP in
+  languages.py / _user_profile_payload in app.py.
+#}
+{% macro language_badges(languages, cls='') %}
+{%- if languages -%}
+  <span class="lang-badge-row {{ cls }}">
+    {%- for lang in languages -%}
+      <span class="lang-badge" style="--lang-color: {{ lang.color }};" title="{{ lang.name }}">{{ lang.abbr }}</span>
+    {%- endfor -%}
+  </span>
+{%- endif -%}
+{% endmacro %}
+
+{#
+  software / hardware / both icon for a builder, meant to sit alongside
+  reputation_badge() + language_badges(). Investors/companies don't have a
+  builder_type, so `builder_type` will be None for them and this renders
+  nothing.
+
+  Usage: {{ builder_type_badge(profile_data.builder_type) }}
+  `builder_type` is {label, color} — see BUILDER_TYPE_META in languages.py.
+#}
+{% macro builder_type_badge(builder_type) %}
+{%- if builder_type -%}
+  <span class="builder-type-badge" style="--type-color: {{ builder_type.color }};" title="{{ builder_type.label }}">
+    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 10 6-10 6L2 8Z"/><path d="m2 16 10 6 10-6"/></svg>
+  </span>
+{%- endif -%}
+{% endmacro %}

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Builder Dashboard — Vision</title>
+<link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/vision-ai.css') }}">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="loader-orb"></div></div>
+{% from "_icons.html" import icon %}
+{% from "_sidebar.html" import sidebar %}
+{% from "_topbar.html" import topbar with context %}
+{% from "_project_card.html" import project_card %}
+{% from "_modals.html" import project_modal, settings_modal, collaboration_modal, user_search_modal, user_profile_modal, project_form_modal %}
+{% from "_reputation.html" import reputation_badge %}
+{% from "_vision_ai.html" import vision_ai_panel with context %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-stack">
+    {% for category, message in messages %}
+      <div class="flash {{ category }}"><span>{{ message }}</span></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="dash-shell">
+  {{ sidebar('builder', active_panel|default('home')) }}
+
+  <main class="dash-main">
+    {{ topbar(url_for('browse_projects')) }}
+
+    {% if active_panel == 'browse' %}
+      <div class="welcome-block"><h2>Browse Projects</h2><p>Discover public projects from builders around the world.</p></div>
+      <form method="get" action="{{ url_for('browse_projects') }}" class="filter-row">
+        <button type="submit" name="category" value="" class="filter-chip {{ 'active' if not category }}">All</button>
+        <button type="submit" name="category" value="software" class="filter-chip {{ 'active' if category == 'software' }}">Software</button>
+        <button type="submit" name="category" value="hardware" class="filter-chip {{ 'active' if category == 'hardware' }}">Hardware</button>
+      </form>
+      {% if projects %}
+        <div class="project-grid">
+          {% for project in projects %}{{ project_card(project, current_user) }}{% endfor %}
+        </div>
+      {% else %}
+        <div class="glass empty-state"><div class="icon-badge">{{ icon('compass', 'icon icon-lg') }}</div><h4>No projects found</h4><p>Try a different search or check back soon.</p></div>
+      {% endif %}
+
+    {% elif active_panel == 'saved' %}
+      <div class="welcome-block"><h2>Saved Projects</h2><p>Projects you've bookmarked for later.</p></div>
+      {% if projects %}
+        <div class="project-grid">
+          {% for project in projects %}{{ project_card(project, current_user) }}{% endfor %}
+        </div>
+      {% else %}
+        <div class="glass empty-state"><div class="icon-badge">{{ icon('bookmark', 'icon icon-lg') }}</div><h4>Nothing saved yet</h4><p>Save projects from Browse to find them here.</p></div>
+      {% endif %}
+
+    {% elif active_panel == 'collaboration_requests' %}
+      <div class="welcome-block"><h2>Collaboration Requests</h2><p>Builders who want to join your projects.</p></div>
+      {% if collaboration_requests_list %}
+        <div class="request-list">
+          {% for req in collaboration_requests_list %}
+            <div class="glass request-card">
+              <div class="request-card-head">
+                <div class="avatar">{{ req.applicant.display_name[0]|upper if req.applicant.display_name else 'V' }}</div>
+                <div>
+                  <div class="request-name">{{ req.applicant.display_name }}{{ reputation_badge(req.applicant) }}</div>
+                  <div class="request-meta">{{ req.skill }} &middot; applying to <strong>{{ req.project.project_name }}</strong></div>
+                </div>
+                <span class="chip {{ 'active software' if req.status == 'Accepted' else '' }}" style="margin-left:auto;">{{ req.status }}</span>
+              </div>
+              <p class="request-reason">{{ req.reason }}</p>
+              {% if req.portfolio %}
+                <a href="{{ req.portfolio }}" target="_blank" rel="noopener" class="request-portfolio-link">{{ icon('globe', 'icon icon-sm') }} {{ req.portfolio }}</a>
+              {% endif %}
+              {% if req.status == 'Pending' %}
+                <div class="request-actions">
+                  <form method="POST" action="{{ url_for('accept_collaboration_request', request_id=req.id) }}" style="flex:1;">
+                    <button type="submit" class="btn btn-primary btn-sm btn-block">Accept</button>
+                  </form>
+                  <form method="POST" action="{{ url_for('decline_collaboration_request', request_id=req.id) }}" style="flex:1;">
+                    <button type="submit" class="btn btn-outline btn-sm btn-block">Decline</button>
+                  </form>
+                  <button type="button" class="btn btn-outline btn-sm message-applicant-btn" data-user-id="{{ req.applicant_id }}">Message</button>
+                </div>
+              {% elif req.status == 'Accepted' %}
+                <div class="request-actions">
+                  <button type="button" class="btn btn-outline btn-sm btn-block message-applicant-btn" data-user-id="{{ req.applicant_id }}">{{ icon('message', 'icon icon-sm') }} Message</button>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="glass empty-state">
+          <div class="icon-badge">{{ icon('users', 'icon icon-lg') }}</div>
+          <h4>No collaboration requests yet</h4>
+          <p>Enable "Open for Collaboration" on a project so other builders can apply.</p>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="welcome-block">
+        <h2>Welcome back, {{ current_user.display_name }} 👋</h2>
+        <p>Let's build something incredible today.</p>
+      </div>
+
+      <div class="stat-grid">
+        <div class="glass stat-card">
+          <div class="stat-icon icon-badge">{{ icon('folder', 'icon icon-sm') }}</div>
+          <div class="stat-value">{{ my_projects|length }}</div>
+          <div class="stat-label">My Projects</div>
+        </div>
+        <div class="glass stat-card">
+          <div class="stat-icon icon-badge">{{ icon('heart', 'icon icon-sm') }}</div>
+          <div class="stat-value">{{ total_likes }}</div>
+          <div class="stat-label">Likes Received</div>
+        </div>
+        <div class="glass stat-card">
+          <div class="stat-icon icon-badge">{{ icon('bookmark', 'icon icon-sm') }}</div>
+          <div class="stat-value">{{ total_saves }}</div>
+          <div class="stat-label">Times Saved</div>
+        </div>
+        <div class="glass stat-card">
+          <div class="stat-icon icon-badge">{{ icon('shield', 'icon icon-sm') }}</div>
+          <div class="stat-value">Active</div>
+          <div class="stat-label">AI Guardian</div>
+        </div>
+      </div>
+
+      <div class="panel-head">
+        <h3>Quick Actions</h3>
+      </div>
+      <div style="display:flex; gap:14px; margin-bottom:44px; flex-wrap:wrap;">
+        <button class="btn btn-primary" id="openCreateProject">{{ icon('plus-circle', 'icon icon-sm') }} Create Project</button>
+        <a href="{{ url_for('browse_projects') }}" class="btn btn-outline">{{ icon('compass', 'icon icon-sm') }} Browse Projects</a>
+      </div>
+
+      <div class="panel-head" id="my-projects">
+        <h3>My Projects</h3>
+      </div>
+      {% if my_projects %}
+        <div class="project-grid">
+          {% for project in my_projects %}{{ project_card(project, current_user, show_manage=True) }}{% endfor %}
+        </div>
+      {% else %}
+        <div class="glass empty-state">
+          <div class="icon-badge">{{ icon('folder', 'icon icon-lg') }}</div>
+          <h4>No projects yet</h4>
+          <p>Publish your first project to start getting discovered.</p>
+        </div>
+      {% endif %}
+
+      {% if team_projects %}
+      <div class="panel-head" id="team-projects" style="margin-top:44px;">
+        <h3>{{ icon('users', 'icon icon-sm') }} Projects I'm Collaborating On</h3>
+      </div>
+      <div class="project-grid">
+        {% for project in team_projects %}{{ project_card(project, current_user, show_manage=True) }}{% endfor %}
+      </div>
+      {% endif %}
+    {% endif %}
+  </main>
+</div>
+
+<nav class="bottom-nav">
+  <a href="{{ url_for('builder_dashboard') }}" class="{{ 'active' if active_panel|default('home') == 'home' }}">{{ icon('grid', 'icon icon-sm') }} Home</a>
+  <a href="{{ url_for('browse_projects') }}" class="{{ 'active' if active_panel == 'browse' }}">{{ icon('compass', 'icon icon-sm') }} Browse</a>
+  <a href="{{ url_for('saved_projects') }}" class="{{ 'active' if active_panel == 'saved' }}">{{ icon('bookmark', 'icon icon-sm') }} Saved</a>
+  <a href="{{ url_for('messages_page') }}" class="{{ 'active' if active_panel == 'messages' }}">{{ icon('message', 'icon icon-sm') }} Messages</a>
+  <a href="{{ url_for('profile_page') }}" class="{{ 'active' if active_panel == 'profile' }}">{{ icon('user', 'icon icon-sm') }} Profile</a>
+</nav>
+
+<button type="button" class="mobile-fab-create" id="mobileCreateBtn" title="Create Project">{{ icon('plus', 'icon icon-sm') }}</button>
+
+{{ project_modal() }}
+{{ settings_modal(current_user) }}
+{{ collaboration_modal() }}
+{{ user_search_modal() }}
+{{ user_profile_modal() }}
+
+{{ project_form_modal() }}
+
+{{ vision_ai_panel() }}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/vision-ai.js') }}"></script>
+</body>
+</html>

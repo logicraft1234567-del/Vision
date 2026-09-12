@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Dashboard — Vision</title>
+<link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/vision-ai.css') }}">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="loader-orb"></div></div>
+{% from "_icons.html" import icon %}
+{% from "_sidebar.html" import sidebar %}
+{% from "_topbar.html" import topbar with context %}
+{% from "_project_card.html" import project_card %}
+{% from "_modals.html" import project_modal, settings_modal, collaboration_modal, user_search_modal, user_profile_modal, project_form_modal %}
+{% from "_vision_ai.html" import vision_ai_panel with context %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-stack">
+    {% for category, message in messages %}<div class="flash {{ category }}"><span>{{ message }}</span></div>{% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="dash-shell">
+  {{ sidebar('company', active_panel|default('home')) }}
+
+  <main class="dash-main">
+    {{ topbar(url_for('browse_projects')) }}
+
+    {% if active_panel == 'saved' %}
+      <div class="welcome-block"><h2>Saved Projects</h2><p>Projects you've bookmarked for later.</p></div>
+    {% else %}
+      <div class="welcome-block">
+        <h2>Welcome back, {{ current_user.display_name }} 👋</h2>
+        <p>Find products worth partnering with or acquiring.</p>
+      </div>
+      <form method="get" action="{{ url_for('browse_projects') }}" class="filter-row">
+        <button type="submit" name="category" value="" class="filter-chip active">All</button>
+        <button type="submit" name="category" value="software" class="filter-chip">Software</button>
+        <button type="submit" name="category" value="hardware" class="filter-chip">Hardware</button>
+      </form>
+    {% endif %}
+
+    {% if projects %}
+      <div class="project-grid">
+        {% for project in projects %}{{ project_card(project, current_user) }}{% endfor %}
+      </div>
+    {% else %}
+      <div class="glass empty-state">
+        <div class="icon-badge">{{ icon('briefcase', 'icon icon-lg') }}</div>
+        <h4>No projects to show</h4>
+        <p>Check back soon as builders publish new projects.</p>
+      </div>
+    {% endif %}
+
+    {% if team_projects %}
+    <div class="panel-head" style="margin-top:44px;">
+      <h3>{{ icon('users', 'icon icon-sm') }} Projects I'm Collaborating On</h3>
+    </div>
+    <div class="project-grid">
+      {% for project in team_projects %}{{ project_card(project, current_user, show_manage=True) }}{% endfor %}
+    </div>
+    {% endif %}
+  </main>
+</div>
+
+<nav class="bottom-nav">
+  <a href="{{ url_for('company_dashboard') }}" class="{{ 'active' if active_panel|default('home') == 'home' }}">{{ icon('grid', 'icon icon-sm') }} Home</a>
+  <a href="{{ url_for('browse_projects') }}" class="{{ 'active' if active_panel == 'browse' }}">{{ icon('compass', 'icon icon-sm') }} Browse</a>
+  <a href="{{ url_for('saved_projects') }}" class="{{ 'active' if active_panel == 'saved' }}">{{ icon('bookmark', 'icon icon-sm') }} Saved</a>
+  <a href="{{ url_for('messages_page') }}" class="{{ 'active' if active_panel == 'messages' }}">{{ icon('message', 'icon icon-sm') }} Messages</a>
+  <a href="{{ url_for('profile_page') }}" class="{{ 'active' if active_panel == 'profile' }}">{{ icon('user', 'icon icon-sm') }} Profile</a>
+</nav>
+
+{{ project_modal() }}
+{{ settings_modal(current_user) }}
+{{ collaboration_modal() }}
+{{ user_search_modal() }}
+{{ user_profile_modal() }}
+{{ project_form_modal() }}
+{{ vision_ai_panel() }}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/vision-ai.js') }}"></script>
+</body>
+</html>

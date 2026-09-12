@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}Sign Up — Vision{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="hero-bg">
+    <div class="blob blob-1" id="blob1"></div>
+    <div class="blob blob-2" id="blob2"></div>
+  </div>
+
+  <div class="glass auth-card is-visible" style="max-width:520px;">
+    <div class="brand"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Vision"><span>Vision</span></div>
+
+    <!-- STEP 1: Choose account type -->
+    <div class="signup-step active" id="step1">
+      <h2>Join Vision</h2>
+      <p class="sub">Choose the account type that fits you.</p>
+      <div class="role-select-grid">
+        <div class="glass role-card" data-role="builder">
+          <div class="icon-badge" style="background:rgba(99,102,241,0.12);color:#6366F1;border-color:rgba(99,102,241,0.3);">{{ icon('cpu') }}</div>
+          <h4>Builder</h4>
+          <p>Showcase your projects</p>
+        </div>
+        <div class="glass role-card" data-role="investor">
+          <div class="icon-badge" style="background:rgba(59,130,246,0.12);color:#3B82F6;border-color:rgba(59,130,246,0.3);">{{ icon('trending-up') }}</div>
+          <h4>Investor</h4>
+          <p>Discover innovation</p>
+        </div>
+        <div class="glass role-card" data-role="company">
+          <div class="icon-badge" style="background:rgba(251,191,36,0.12);color:#FBBF24;border-color:rgba(251,191,36,0.3);">{{ icon('briefcase') }}</div>
+          <h4>Company</h4>
+          <p>Partner & acquire</p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary btn-block" id="continueBtn" style="margin-top:22px;" disabled>Continue {{ icon('arrow-right', 'icon icon-sm') }}</button>
+    </div>
+
+    <!-- STEP 2: Forms -->
+    <div class="signup-step" id="step2">
+      <span class="step-back" id="backBtn">{{ icon('chevron-left', 'icon icon-sm') }} Back</span>
+      <h2 id="step2Title">Create your account</h2>
+      <p class="sub">Fill in your details to get started.</p>
+
+      <form method="POST" action="{{ url_for('signup') }}" enctype="multipart/form-data">
+        <input type="hidden" name="role" id="roleInput" value="">
+
+        <!-- Builder fields -->
+        <div class="role-fields" data-fields="builder" style="display:none;">
+          <div class="form-grid-2">
+            <div class="field-group"><label>Full Name</label><input class="field-input" type="text" name="full_name" placeholder="Jane Doe"></div>
+            <div class="field-group"><label>Username</label><input class="field-input" type="text" name="username" placeholder="janedoe"></div>
+          </div>
+          <div class="field-group"><label>Country</label><input class="field-input" type="text" name="country" placeholder="Nigeria"></div>
+          <div class="form-grid-2">
+            <div class="field-group">
+              <label>Builder Type</label>
+              <select class="field-input" name="builder_type">
+                <option value="software">Software</option>
+                <option value="hardware">Hardware</option>
+                <option value="both">Both</option>
+              </select>
+            </div>
+            <div class="field-group"><label>Primary Skill</label><input class="field-input" type="text" name="primary_skill" placeholder="Full-stack engineer"></div>
+          </div>
+        </div>
+
+        <!-- Investor fields -->
+        <div class="role-fields" data-fields="investor" style="display:none;">
+          <div class="form-grid-2">
+            <div class="field-group"><label>Full Name</label><input class="field-input" type="text" name="full_name" placeholder="Jane Doe"></div>
+            <div class="field-group"><label>Username</label><input class="field-input" type="text" name="username" placeholder="janedoe"></div>
+          </div>
+          <div class="form-grid-2">
+            <div class="field-group"><label>Country</label><input class="field-input" type="text" name="country" placeholder="United States"></div>
+            <div class="field-group">
+              <label>Investor Type</label>
+              <select class="field-input" name="investor_type">
+                <option value="angel">Angel Investor</option>
+                <option value="vc">Venture Capital</option>
+                <option value="corporate">Corporate Investor</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Company fields -->
+        <div class="role-fields" data-fields="company" style="display:none;">
+          <div class="field-group"><label>Company Name</label><input class="field-input" type="text" name="company_name" placeholder="Acme Inc."></div>
+          <div class="form-grid-2">
+            <div class="field-group"><label>Country</label><input class="field-input" type="text" name="country" placeholder="Germany"></div>
+            <div class="field-group"><label>Industry</label><input class="field-input" type="text" name="industry" placeholder="Fintech"></div>
+          </div>
+        </div>
+
+        <!-- Shared: known programming languages (builder + investor only, not company) -->
+        <div class="role-fields" data-fields="builder investor" style="display:none;">
+          <div class="field-group">
+            <label>Programming languages you know <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+            <div class="lang-picker-grid">
+              {% for name, color, abbr in languages %}
+                <label class="lang-picker-option">
+                  <input type="checkbox" name="languages" value="{{ name }}">
+                  <span class="lang-picker-chip" style="--chip-color: {{ color }};">{{ abbr }}</span>
+                  <span class="lang-picker-name">{{ name }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Shared fields -->
+        <div class="field-group"><label>Email</label><input class="field-input" type="email" name="email" placeholder="you@example.com" required></div>
+        <div class="field-group">
+          <label>Password</label>
+          <div class="password-wrap">
+            <input class="field-input" type="password" name="password" id="signupPassword" placeholder="••••••••" required>
+            <button type="button" class="password-toggle" data-toggle-target="signupPassword">{{ icon('eye', 'icon icon-sm') }}</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:8px;">Create Account</button>
+      </form>
+    </div>
+
+    <p class="auth-footer-text">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+  </div>
+</div>
+{% endblock %}

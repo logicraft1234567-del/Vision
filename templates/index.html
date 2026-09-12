@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="blob blob-1" id="blob1"></div>
+    <div class="blob blob-2" id="blob2"></div>
+    <div id="particles"></div>
+  </div>
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="hero-eyebrow"><span class="dot"></span> Now onboarding builders worldwide</span>
+      <h1>Build Anywhere.<br><span class="gradient-text">Be Discovered Everywhere.</span></h1>
+      <p class="lead">Vision is where builders showcase software and hardware projects, connect with investors and companies, and get discovered by the people who can move their idea forward.</p>
+      <div class="hero-actions">
+        <a href="{{ url_for('signup') }}" class="btn btn-primary">{{ icon('zap', 'icon icon-sm') }} I'm a Builder</a>
+        <a href="#showcase" class="btn btn-outline">Explore Vision {{ icon('arrow-right', 'icon icon-sm') }}</a>
+      </div>
+    </div>
+    <div class="hero-orb-wrap" id="orbWrap">
+      <div class="orb-ring orb-ring-1"></div>
+      <div class="orb-ring orb-ring-2"></div>
+      <div class="hero-orb" id="heroOrb">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Vision">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2: THE PROBLEM ============ -->
+<section id="problem">
+  <div class="container">
+    <div class="reveal">
+      <span class="section-tag">The Problem</span>
+      <h2 class="section-heading">Brilliant ideas deserve global opportunities.</h2>
+      <p class="section-sub">Every day, incredible builders create things worth noticing — and every day, most of them go unseen.</p>
+    </div>
+    <div class="problem-grid stagger">
+      <div class="glass problem-card reveal" style="--i:0">
+        <span class="num">01</span>
+        <div class="icon-badge">{{ icon('cpu') }}</div>
+        <h3>Build something incredible.</h3>
+        <p>You spend months turning an idea into a real, working product — software or hardware.</p>
+      </div>
+      <div class="glass problem-card reveal" style="--i:1">
+        <span class="num">02</span>
+        <div class="icon-badge">{{ icon('eye') }}</div>
+        <h3>Struggle to get noticed.</h3>
+        <p>Great work gets lost in the noise. Reaching the right audience is harder than building the product.</p>
+      </div>
+      <div class="glass problem-card reveal" style="--i:2">
+        <span class="num">03</span>
+        <div class="icon-badge">{{ icon('globe') }}</div>
+        <h3>Opportunity is somewhere else.</h3>
+        <p>Investors and companies are searching for products like yours — but they can't find you, and you can't find them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3: ECOSYSTEM ============ -->
+<section id="ecosystem">
+  <div class="container">
+    <div class="reveal">
+      <span class="section-tag">The Vision Ecosystem</span>
+      <h2 class="section-heading">One platform. Three roles. Endless connections.</h2>
+      <p class="section-sub">Vision brings builders, investors, and companies together on common ground.</p>
+    </div>
+    <div class="ecosystem-grid stagger">
+      <div class="glass ecosystem-card builder reveal" style="--i:0">
+        <div class="icon-badge">{{ icon('cpu') }}</div>
+        <h3>Builder</h3>
+        <p>Upload your software or hardware projects and put them in front of the world.</p>
+      </div>
+      <div class="glass ecosystem-card investor reveal" style="--i:1">
+        <div class="icon-badge">{{ icon('trending-up') }}</div>
+        <h3>Investor</h3>
+        <p>Discover innovation early, follow builders, and find the next thing worth backing.</p>
+      </div>
+      <div class="glass ecosystem-card company reveal" style="--i:2">
+        <div class="icon-badge">{{ icon('briefcase') }}</div>
+        <h3>Company</h3>
+        <p>Find products worth partnering with, acquiring, or integrating into your roadmap.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 4: HOW IT WORKS ============ -->
+<section id="how-it-works">
+  <div class="container">
+    <div class="reveal">
+      <span class="section-tag">How Vision Works</span>
+      <h2 class="section-heading">From idea to discovery in four steps.</h2>
+    </div>
+    <div class="timeline stagger">
+      <div class="timeline-step reveal" style="--i:0">
+        <div class="step-dot">{{ icon('user') }}</div>
+        <h4>1. Create account</h4>
+        <p>Join as a builder, investor, or company in under a minute.</p>
+      </div>
+      <div class="timeline-step reveal" style="--i:1">
+        <div class="step-dot">{{ icon('upload-cloud') }}</div>
+        <h4>2. Publish project</h4>
+        <p>Share your project and tell its story with visuals and video.</p>
+      </div>
+      <div class="timeline-step reveal" style="--i:2">
+        <div class="step-dot">{{ icon('compass') }}</div>
+        <h4>3. Get discovered</h4>
+        <p>The right people find you — investors, companies, and collaborators.</p>
+      </div>
+      <div class="timeline-step reveal" style="--i:3">
+        <div class="step-dot">{{ icon('message') }}</div>
+        <h4>4. Connect & build</h4>
+        <p>Start conversations and build the future together.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 5: SHOWCASE ============ -->
+<section id="showcase">
+  <div class="container">
+    <div class="showcase-wrap">
+      <div class="showcase-copy reveal-left">
+        <span class="section-tag">Showcase Projects</span>
+        <h2 class="section-heading">Tell your project's story, beautifully.</h2>
+        <p class="section-sub" style="margin-bottom:0;">A publishing experience built for builders — screenshots, demo videos, and clear signals about what you're open to.</p>
+        <div class="mini-list">
+          <div class="mini-list-item">
+            <div class="icon-badge">{{ icon('image') }}</div>
+            <div><h5>Screenshot previews</h5><p>Showcase your product visually with a clean gallery.</p></div>
+          </div>
+          <div class="mini-list-item">
+            <div class="icon-badge">{{ icon('video') }}</div>
+            <div><h5>Demo video preview</h5><p>Let people see your project in motion.</p></div>
+          </div>
+          <div class="mini-list-item">
+            <div class="icon-badge">{{ icon('grid') }}</div>
+            <div><h5>Category chips</h5><p>Tag your project as software or hardware instantly.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="glass mock-upload-card reveal-right">
+        <div class="mock-preview">
+          {{ icon('upload-cloud', 'icon icon-lg') }}
+          <span>Drop screenshots or demo video</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip active software">Software</span>
+          <span class="chip">Hardware</span>
+        </div>
+        <div class="mock-toggle-row">
+          <label class="toggle-label">{{ icon('trending-up', 'icon icon-sm') }} Open for Investment</label>
+          <span class="toggle on"></span>
+        </div>
+        <div class="mock-toggle-row">
+          <label class="toggle-label">{{ icon('users', 'icon icon-sm') }} Looking for Team</label>
+          <span class="toggle"></span>
+        </div>
+        <div class="mock-toggle-row">
+          <label class="toggle-label">{{ icon('globe', 'icon icon-sm') }} Public Project</label>
+          <span class="toggle on"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 6: AI GUARDIAN ============ -->
+<section id="guardian">
+  <div class="container">
+    <div class="glass guardian-panel reveal-scale">
+      <span class="section-tag">Vision Intelligence</span>
+      <h2 class="section-heading" style="margin:0 auto 16px;">AI Guardian is on the way.</h2>
+      <p class="section-sub" style="margin:0 auto;">A layer of intelligence protecting builders, investors, and companies across the platform.</p>
+      <div class="guardian-grid stagger">
+        <div class="guardian-card reveal" style="--i:0">
+          <div class="icon-badge">{{ icon('shield') }}</div>
+          <h4>Scam Detection</h4>
+          <span class="badge-soon">Coming Soon</span>
+        </div>
+        <div class="guardian-card reveal" style="--i:1">
+          <div class="icon-badge">{{ icon('file-text') }}</div>
+          <h4>Project Review</h4>
+          <span class="badge-soon">Coming Soon</span>
+        </div>
+        <div class="guardian-card reveal" style="--i:2">
+          <div class="icon-badge">{{ icon('shield-check') }}</div>
+          <h4>Contract Review</h4>
+          <span class="badge-soon">Coming Soon</span>
+        </div>
+        <div class="guardian-card reveal" style="--i:3">
+          <div class="icon-badge">{{ icon('lightbulb') }}</div>
+          <h4>Smart Suggestions</h4>
+          <span class="badge-soon">Coming Soon</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 7: BUILT EVERYWHERE ============ -->
+<section id="everywhere">
+  <div class="container">
+    <div class="reveal" style="text-align:center; margin: 0 auto 70px;">
+      <span class="section-tag">Built Everywhere</span>
+      <h2 class="section-heading" style="margin:0 auto 16px;">One Vision, every screen.</h2>
+      <p class="section-sub" style="margin:0 auto;">A fully responsive experience across desktop, tablet, and mobile.</p>
+    </div>
+    <div class="device-row stagger">
+      <div class="device desktop reveal" style="--i:0"><div class="screen">{{ icon('monitor', 'icon icon-lg') }}</div></div>
+      <div class="device tablet reveal" style="--i:1"><div class="screen">{{ icon('tablet', 'icon icon-lg') }}</div></div>
+      <div class="device mobile reveal" style="--i:2"><div class="screen">{{ icon('smartphone') }}</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 8: CTA ============ -->
+<section id="cta" class="cta-section">
+  <div class="container">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Vision" class="cta-logo reveal-scale">
+    <h2 class="reveal">Start Building the Future.</h2>
+    <div class="cta-actions reveal">
+      <a href="{{ url_for('signup') }}" class="btn btn-primary">{{ icon('cpu', 'icon icon-sm') }} Join as Builder</a>
+      <a href="{{ url_for('signup') }}" class="btn btn-outline">{{ icon('trending-up', 'icon icon-sm') }} Join as Investor</a>
+      <a href="{{ url_for('signup') }}" class="btn btn-outline">{{ icon('briefcase', 'icon icon-sm') }} Join as Company</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

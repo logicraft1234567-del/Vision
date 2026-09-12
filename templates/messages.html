@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages — Vision</title>
+<link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/deal-room.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat-features.css') }}">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="loader-orb"></div></div>
+{% from "_icons.html" import icon %}
+{% from "_sidebar.html" import sidebar %}
+{% from "_topbar.html" import topbar with context %}
+{% from "_reputation.html" import reputation_badge %}
+{% from "_modals.html" import user_search_modal, user_profile_modal, settings_modal %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-stack">
+    {% for category, message in messages %}<div class="flash {{ category }}"><span>{{ message }}</span></div>{% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="dash-shell">
+  {{ sidebar(current_user.role, 'messages') }}
+
+  <main class="dash-main">
+    {{ topbar(url_for('browse_projects')) }}
+
+    <div class="welcome-block"><h2>Messages</h2><p>Conversations with builders, investors, and companies.</p></div>
+
+    <div class="glass messages-shell" id="messagesShell" data-active-conversation="{{ active_conversation_id or '' }}" data-role="{{ current_user.role }}" data-user-id="{{ current_user.id }}">
+      <div class="conversation-list" id="conversationList">
+        {% if conversations %}
+          {% for convo in conversations %}
+            {% if convo.is_group %}
+              <div class="conversation-item conversation-item-group {{ 'active' if convo.id == active_conversation_id }}" data-conversation-id="{{ convo.id }}">
+                <div class="avatar avatar-group">{{ icon('users', 'icon icon-sm') }}</div>
+                <div class="conversation-item-body">
+                  <div class="conversation-item-top">
+                    <span class="conversation-name">{{ convo.title_for(current_user.id) }}</span>
+                  </div>
+                  {% set last = convo.last_message %}
+                  <p class="conversation-preview">{{ last.content if last else 'Team chat — say hello 👋' }}</p>
+                </div>
+                {% set unread = convo.unread_count_for(current_user.id) %}
+                {% if unread %}<span class="unread-dot" data-unread-count="{{ unread }}"></span>{% endif %}
+              </div>
+            {% else %}
+              {% set other = convo.other_member(current_user.id) %}
+              {% if other %}
+                {% set last = convo.last_message %}
+                <div class="conversation-item {{ 'active' if convo.id == active_conversation_id }}" data-conversation-id="{{ convo.id }}">
+                  <div class="avatar">
+                    {% if other.avatar_url %}<img src="{{ other.avatar_url }}">{% else %}{{ other.display_name[0]|upper if other.display_name else 'V' }}{% endif %}
+                  </div>
+                  <div class="conversation-item-body">
+                    <div class="conversation-item-top">
+                      <span class="conversation-name">{{ other.display_name }}</span>{{ reputation_badge(other) }}
+                    </div>
+                    <p class="conversation-preview">{{ last.content if last else 'Say hello 👋' }}</p>
+                  </div>
+                  {% set unread = convo.unread_count_for(current_user.id) %}
+                  {% if unread %}<span class="unread-dot" data-unread-count="{{ unread }}"></span>{% endif %}
+                </div>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="empty-state" style="padding:40px 20px;">
+            <div class="icon-badge">{{ icon('message', 'icon icon-lg') }}</div>
+            <h4>No conversations yet</h4>
+            <p>Conversations start when you accept a collaboration request or message someone directly.</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="conversation-window" id="conversationWindow">
+        <div class="conversation-empty" id="conversationEmptyState">
+          <div class="icon-badge">{{ icon('message', 'icon icon-lg') }}</div>
+          <h4>Select a conversation</h4>
+          <p>Pick someone from the list to see your messages.</p>
+        </div>
+
+        <div class="conversation-active" id="conversationActive" style="display:none;">
+          <div class="conversation-header">
+            <div class="avatar" id="convoHeaderAvatar"></div>
+            <div style="flex:1; min-width:0;">
+              <div class="conversation-name" id="convoHeaderName"></div>
+              <div class="conversation-submeta">
+                <span id="convoHeaderRole"></span>
+                <span id="convoHeaderCountry"></span>
+              </div>
+            </div>
+            <button type="button" class="convo-header-icon-btn" id="convoSearchBtn" title="Search in conversation">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <button type="button" class="convo-header-icon-btn" id="convoStarredBtn" title="Starred messages">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <button type="button" class="convo-header-icon-btn" id="convoGroupInfoBtn" style="display:none;" title="Group info">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </button>
+            <button type="button" class="convo-block-btn" id="convoBlockBtn" style="display:none;" title="Block this user">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            </button>
+          </div>
+
+          <div class="convo-search-row" id="convoSearchRow" style="display:none;">
+            <input type="text" id="convoSearchInput" placeholder="Search in this conversation…" autocomplete="off">
+            <button type="button" id="convoSearchClose">&times;</button>
+          </div>
+
+          <div class="convo-blocked-banner" id="convoBlockedBanner" style="display:none;"></div>
+
+          <div class="convo-tabs" id="convoTabs">
+            <button type="button" class="convo-tab active" data-tab="messages">{{ icon('message', 'icon icon-sm') }} Messages</button>
+            <button type="button" class="convo-tab" data-tab="dealroom" id="dealRoomTabBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              Deal Room <span class="dr-badge-dot"></span>
+            </button>
+          </div>
+
+          <div class="message-bubbles" id="messageBubbles"></div>
+          <div class="typing-indicator-row" id="typingIndicatorRow" style="display:none;"></div>
+
+          <div class="reply-preview-row" id="replyPreviewRow" style="display:none;">
+            <div class="reply-preview-bar"></div>
+            <div class="reply-preview-body">
+              <div class="reply-preview-name" id="replyPreviewName"></div>
+              <div class="reply-preview-text" id="replyPreviewText"></div>
+            </div>
+            <button type="button" id="replyPreviewClose">&times;</button>
+          </div>
+
+          <div class="attachment-preview-row" id="attachmentPreviewRow" style="display:none;">
+            <div class="attachment-preview-thumb" id="attachmentPreviewThumb"></div>
+            <div class="attachment-preview-name" id="attachmentPreviewName"></div>
+            <button type="button" id="attachmentPreviewClose">&times;</button>
+          </div>
+
+          <form class="message-input-row" id="messageForm" enctype="multipart/form-data">
+            <input type="file" id="attachmentInput" style="display:none;" accept="image/png,image/jpeg,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.csv">
+            <button type="button" class="attach-btn" id="attachBtn" title="Attach a file or image"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg></button>
+            <input class="field-input" type="text" name="content" id="messageInput" placeholder="Write a message... (tip: @VISIONAI to bring in the copilot)" autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-sm">{{ icon('message', 'icon icon-sm') }} Send</button>
+          </form>
+
+          <div class="deal-room-panel" id="dealRoomPanel" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<nav class="bottom-nav">
+  <a href="{{ url_for(current_user.role + '_dashboard') }}">{{ icon('grid', 'icon icon-sm') }} Home</a>
+  <a href="{{ url_for('browse_projects') }}">{{ icon('compass', 'icon icon-sm') }} Browse</a>
+  <a href="{{ url_for('saved_projects') }}">{{ icon('bookmark', 'icon icon-sm') }} Saved</a>
+  <a href="{{ url_for('messages_page') }}" class="active">{{ icon('message', 'icon icon-sm') }} Messages</a>
+  <a href="{{ url_for('profile_page') }}">{{ icon('user', 'icon icon-sm') }} Profile</a>
+</nav>
+
+{{ user_search_modal() }}
+{{ user_profile_modal() }}
+{{ settings_modal(current_user) }}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/deal-room.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+/* ==========================================================================
+   VISION — Chat features (WhatsApp-style: reply, react, attach, star,
+   forward, typing indicator, seen-by, search, group info)
+   ========================================================================== */
+
+/* Reaction/reply/forward/star also need to appear on received bubbles now,
+   not just my own (style.css only wired the hover trigger for .sent). */
+.message-bubble.received:hover .message-actions,
+.message-bubble.received:focus-within .message-actions {
+  opacity: 1;
+}
+.message-bubble.received .message-actions { right: auto; left: -8px; flex-direction: row-reverse; }
+.message-action-btn.active { color: var(--hardware); border-color: var(--hardware); }
+.message-action-btn[data-star-message].active:hover { color: var(--hardware); }
+
+/* ---- Reply quote ---- */
+.message-reply-quote {
+  display: block;
+  border-left: 3px solid var(--primary);
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  max-width: 100%;
+}
+.message-reply-quote-name { font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
+.message-reply-quote-text {
+  font-size: 12px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
+}
+.message-row.jump-highlight .message-bubble { animation: dr-jump-flash 1.4s ease; }
+@keyframes dr-jump-flash {
+  0% { box-shadow: 0 0 0 3px rgba(16,185,129,0.6); }
+  100% { box-shadow: none; }
+}
+
+/* ---- Forwarded tag ---- */
+.message-forwarded-tag {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-style: italic; color: var(--muted); margin-bottom: 4px;
+}
+.message-forwarded-tag svg { width: 12px; height: 12px; }
+
+/* ---- Attachments ---- */
+.message-attachment-image {
+  display: block; margin-bottom: 6px; border-radius: 12px; overflow: hidden;
+  max-width: 260px; border: 1px solid var(--border);
+}
+.message-attachment-image img { display: block; width: 100%; height: auto; max-height: 280px; object-fit: cover; }
+.message-attachment-file {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px 12px; margin-bottom: 6px;
+  text-decoration: none; color: var(--white); max-width: 240px;
+}
+.message-attachment-file svg:first-child { width: 20px; height: 20px; color: var(--primary); flex-shrink: 0; }
+.message-attachment-name {
+  flex: 1; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.message-attachment-download { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+
+/* ---- Reactions ---- */
+.message-reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.message-reaction-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11.5px; padding: 2px 7px; border-radius: 999px;
+  background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+  color: var(--white); cursor: pointer; transition: var(--transition);
+}
+.message-reaction-pill.mine { border-color: var(--primary); background: rgba(16,185,129,0.15); }
+.message-reaction-pill:hover { border-color: var(--primary); }
+
+/* ---- Emoji picker popover (for the react action) ---- */
+.emoji-picker-popover {
+  position: fixed; z-index: 400;
+  display: flex; gap: 4px; padding: 6px 8px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
+.emoji-picker-popover button {
+  font-size: 18px; background: none; border: none; cursor: pointer;
+  padding: 2px 4px; border-radius: 50%; transition: transform 0.15s;
+  line-height: 1;
+}
+.emoji-picker-popover button:hover { transform: scale(1.25); }
+
+/* ---- Seen-by (group) ---- */
+.message-seen-by {
+  text-align: right; font-size: 11px; color: var(--muted);
+  padding: 2px 6px 0; font-style: italic;
+}
+
+/* ---- Typing indicator ---- */
+.typing-indicator-row {
+  padding: 2px 4px 6px; font-size: 12px; color: var(--muted);
+  display: flex; align-items: center; gap: 6px; font-style: italic;
+}
+.typing-indicator-dots { display: inline-flex; gap: 3px; }
+.typing-indicator-dots span {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--primary);
+  animation: dr-typing-bounce 1.2s infinite ease-in-out;
+}
+.typing-indicator-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-indicator-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes dr-typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
+/* ---- Reply preview bar (above composer) ---- */
+.reply-preview-row {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 12px; padding: 8px 12px; margin: 0 0 8px;
+}
+.reply-preview-bar { width: 3px; align-self: stretch; background: var(--primary); border-radius: 3px; }
+.reply-preview-body { flex: 1; min-width: 0; }
+.reply-preview-name { font-size: 11.5px; font-weight: 700; color: var(--primary); }
+.reply-preview-text { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reply-preview-row button, .attachment-preview-row button {
+  background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1;
+}
+.reply-preview-row button:hover, .attachment-preview-row button:hover { color: var(--white); }
+
+/* ---- Attachment preview (before send) ---- */
+.attachment-preview-row {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 12px; padding: 8px 12px; margin: 0 0 8px;
+}
+.attachment-preview-thumb {
+  width: 36px; height: 36px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+  background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center;
+  color: var(--primary);
+}
+.attachment-preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.attachment-preview-name { flex: 1; font-size: 12.5px; color: var(--white); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- Header icon buttons (search / starred / group info) ---- */
+.convo-header-icon-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: var(--transition); flex-shrink: 0;
+}
+.convo-header-icon-btn:hover { color: var(--primary); border-color: var(--primary); }
+
+/* ---- In-conversation search ---- */
+.convo-search-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0 4px;
+}
+.convo-search-row input {
+  flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 12px; color: var(--white); font-size: 13px; font-family: 'Inter', sans-serif;
+}
+.convo-search-row input:focus { outline: none; border-color: var(--primary); }
+.convo-search-row button { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+.message-row.search-hidden { display: none; }
+.message-row.search-match .message-bubble { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ---- Side panels shared shell (Group Info / Starred Messages) ---- */
+.chat-panel-overlay {
+  position: fixed; inset: 0; background: rgba(5,8,15,0.6); z-index: 350;
+  display: flex; justify-content: flex-end;
+}
+.chat-side-panel {
+  width: 100%; max-width: 360px; height: 100%; background: var(--card);
+  border-left: 1px solid var(--border); overflow-y: auto; padding: 22px;
+}
+.chat-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.chat-panel-head h3 { font-size: 17px; margin: 0; }
+.chat-panel-close { background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+
+.group-member-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.group-member-row:last-child { border-bottom: none; }
+.group-member-avatar {
+  width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: rgba(16,185,129,0.15); color: var(--primary);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+}
+.group-member-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.group-member-name { font-size: 13.5px; font-weight: 600; color: var(--white); display: flex; align-items: center; gap: 6px; }
+.group-member-role { font-size: 11.5px; color: var(--muted); text-transform: capitalize; }
+.group-owner-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+  color: var(--hardware); background: rgba(245,158,11,0.12); border-radius: 999px; padding: 2px 7px;
+}
+
+.starred-empty, .forward-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 30px 10px; }
+.starred-item {
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; cursor: pointer;
+}
+.starred-item:hover { border-color: var(--primary); }
+.starred-item .starred-convo { font-size: 11px; color: var(--primary); font-weight: 700; margin-bottom: 3px; }
+.starred-item .starred-content { font-size: 13px; color: var(--white); }
+
+/* ---- Forward picker modal ---- */
+.forward-modal-overlay {
+  position: fixed; inset: 0; background: rgba(5,8,15,0.72); z-index: 400;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.forward-modal {
+  width: 100%; max-width: 420px; max-height: 70vh; overflow-y: auto;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px;
+}
+.forward-target-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 6px;
+  border-radius: 10px; cursor: pointer;
+}
+.forward-target-row:hover { background: rgba(255,255,255,0.05); }
+
+/* ---- Team function tag (under sender name in group messages) ---- */
+.message-sender-function {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 10.5px; color: var(--muted); margin: -4px 0 4px 2px;
+  font-family: 'Inter', sans-serif;
+}
+.message-sender-function-icon { display: inline-flex; width: 11px; height: 11px; color: var(--primary); }
+.message-sender-function-icon svg { width: 100%; height: 100%; }
+
+.group-member-function {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11.5px; color: var(--muted); margin-top: 2px;
+}
+.group-member-function-icon { display: inline-flex; width: 13px; height: 13px; color: var(--primary); }
+.group-member-function-icon svg { width: 100%; height: 100%; }
+
+/* ---- Owner add/remove member controls ---- */
+.group-member-remove-btn {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.group-member-remove-btn svg { width: 13px; height: 13px; }
+.group-member-remove-btn:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
+
+.group-add-member-row { margin-bottom: 16px; position: relative; }
+.group-add-member-row input {
+  width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 10px; padding: 9px 12px; color: var(--white); font-size: 13px; font-family: 'Inter', sans-serif;
+}
+.group-add-member-row input:focus { outline: none; border-color: var(--primary); }
+.group-add-member-results { margin-top: 8px; max-height: 220px; overflow-y: auto; }
+.group-add-candidate {
+  display: flex; align-items: center; gap: 8px; padding: 8px 6px; border-radius: 10px; cursor: pointer; font-size: 13px;
+}
+.group-add-candidate:hover { background: rgba(16,185,129,0.08); }
+.group-add-candidate span:nth-child(2) { flex: 1; color: var(--white); }
+.group-add-candidate-role { font-size: 11px; color: var(--muted); text-transform: capitalize; }

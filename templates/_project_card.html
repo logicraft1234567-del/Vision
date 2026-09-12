@@ -1,0 +1,96 @@
+{% from "_icons.html" import icon %}
+{% from "_reputation.html" import reputation_badge %}
+{% macro project_card(project, current_user, show_manage=False) %}
+<div class="glass project-card" data-project-id="{{ project.id }}">
+  <div class="project-cover" data-open-project="{{ project.id }}">
+    {% if project.cover_image %}
+      <img src="{{ url_for('static', filename='uploads/shots/' + project.cover_image) }}" alt="{{ project.project_name }}">
+    {% else %}
+      {{ icon('image', 'icon icon-lg') }}
+    {% endif %}
+    {% if project.category %}
+      <span class="badge {{ project.category }}">{{ project.category|capitalize }}</span>
+    {% endif %}
+    {% if project.collaboration_open_for_applicants %}
+      <span class="badge collab-badge">{{ icon('users', 'icon icon-sm') }} Looking for Collaborators</span>
+    {% endif %}
+    {% if project.is_private %}
+      <span class="badge private-badge" title="Private — password required to view full details">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Private
+      </span>
+    {% endif %}
+  </div>
+  <div class="project-body" data-open-project="{{ project.id }}" style="cursor:pointer;">
+    <h4>{{ project.project_name }}</h4>
+    <div class="project-meta">{{ icon('user', 'icon icon-sm') }} @{{ project.owner.username }}{{ reputation_badge(project.owner) }} &middot; {{ project.stage or 'Stage TBD' }}</div>
+    <p class="project-overview">{{ project.overview or 'No overview provided yet.' }}</p>
+  </div>
+  <div class="project-footer">
+    <div class="project-actions">
+      <button class="project-action-btn like-btn {{ 'liked' if project.is_liked_by(current_user.id) }}" data-project-id="{{ project.id }}">
+        {{ icon('heart', 'icon icon-sm') }} <span class="like-count">{{ project.like_count }}</span>
+      </button>
+      <button class="project-action-btn" data-open-project="{{ project.id }}">
+        {{ icon('message', 'icon icon-sm') }} <span class="comment-count">{{ project.comment_count }}</span>
+      </button>
+    </div>
+    <button class="project-action-btn save-btn {{ 'saved' if project.is_saved_by(current_user.id) }}" data-project-id="{{ project.id }}">
+      {{ icon('bookmark', 'icon icon-sm') }}
+    </button>
+    {% if project.is_team_member(current_user.id) %}
+      <button type="button" class="project-action-btn open-team-chat-btn" data-conversation-id="{{ project.team_conversation.id if project.team_conversation else '' }}" title="Team Chat">
+        {{ icon('users', 'icon icon-sm') }}
+      </button>
+    {% elif current_user.id != project.owner_id %}
+      <button type="button" class="project-action-btn message-applicant-btn" data-user-id="{{ project.owner_id }}" title="Message @{{ project.owner.username }}">
+        {{ icon('message', 'icon icon-sm') }}
+      </button>
+    {% endif %}
+  </div>
+  {% if project.accepted_collaborators %}
+  <div class="project-collaborators">
+    {% for req in project.accepted_collaborators %}
+      <div class="collaborator-chip" data-request-id="{{ req.id }}">
+        <div class="avatar">
+          {% if req.applicant.avatar_url %}<img src="{{ req.applicant.avatar_url }}">{% else %}{{ req.applicant.display_name[0]|upper if req.applicant.display_name else 'V' }}{% endif %}
+        </div>
+        <span>{{ req.applicant.display_name }}</span>
+        {% if current_user.id == project.owner_id %}
+          <button type="button" class="remove-collaborator-btn" data-project-id="{{ project.id }}" data-request-id="{{ req.id }}" title="Remove collaborator">&times;</button>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if current_user.id != project.owner_id and project.collaboration_open %}
+    {% set collab_status = project.collaboration_status_for(current_user.id) %}
+    <div class="project-collab-row">
+      {% if collab_status == 'Accepted' %}
+        <span class="chip active software" style="width:100%; text-align:center;">{{ icon('check-circle', 'icon icon-sm') }} You're a collaborator</span>
+      {% elif collab_status == 'Pending' %}
+        <span class="chip" style="width:100%; text-align:center;">Application pending</span>
+      {% elif collab_status == 'Declined' %}
+        <span class="chip" style="width:100%; text-align:center; opacity:0.6;">Application declined</span>
+      {% elif project.collaboration_open_for_applicants %}
+        <button type="button" class="btn btn-outline btn-sm btn-block apply-collab-btn" data-project-id="{{ project.id }}">
+          {{ icon('users', 'icon icon-sm') }} Apply to Collaborate
+        </button>
+      {% else %}
+        <span class="chip" style="width:100%; text-align:center; opacity:0.6;">Collaborator slots full</span>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if show_manage and project.can_edit(current_user.id) %}
+  <div class="project-card-manage">
+    <button type="button" class="btn btn-outline btn-sm btn-block" data-open-project="{{ project.id }}">{{ icon('eye', 'icon icon-sm') }} View</button>
+    <button type="button" class="btn btn-outline btn-sm btn-block edit-project-btn" data-project-id="{{ project.id }}">{{ icon('edit', 'icon icon-sm') }} Edit</button>
+    {% if project.can_delete(current_user.id) %}
+    <form method="POST" action="{{ url_for('delete_project', project_id=project.id) }}" style="flex:1;" onsubmit="return confirm('Delete this project permanently?');">
+      <button type="submit" class="btn btn-danger btn-sm btn-block">{{ icon('trash', 'icon icon-sm') }}</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}

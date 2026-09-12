@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — Vision</title>
+<link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="loader-orb"></div></div>
+{% from "_icons.html" import icon %}
+{% from "_sidebar.html" import sidebar %}
+{% from "_topbar.html" import topbar with context %}
+{% from "_project_card.html" import project_card %}
+{% from "_modals.html" import project_modal, settings_modal, collaboration_modal, user_search_modal, user_profile_modal %}
+{% from "_reputation.html" import reputation_badge, language_badges, builder_type_badge %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-stack">
+    {% for category, message in messages %}<div class="flash {{ category }}"><span>{{ message }}</span></div>{% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="dash-shell">
+  {{ sidebar(current_user.role, 'profile') }}
+
+  <main class="dash-main">
+    {{ topbar(url_for('browse_projects')) }}
+
+    <div class="glass profile-hero">
+      <div class="profile-hero-avatar">
+        {% if profile_user.avatar_url %}
+          <img src="{{ profile_user.avatar_url }}" alt="{{ profile_user.display_name }}">
+        {% else %}
+          {{ profile_user.display_name[0]|upper if profile_user.display_name else 'V' }}
+        {% endif %}
+      </div>
+      <div class="profile-hero-info">
+        <div class="profile-hero-name">
+          <h2>{{ profile_user.display_name }}</h2>{{ reputation_badge(profile_user) }}{{ builder_type_badge(profile_data.builder_type) }}
+        </div>
+        {{ language_badges(profile_data.languages, cls='profile-hero-languages') }}
+        <div class="profile-hero-meta">
+          @{{ profile_user.username }} &middot; {{ profile_user.role|capitalize }}{% if profile_data.country %} &middot; {{ icon('map-pin', 'icon icon-sm') }} {{ profile_data.country }}{% endif %}
+        </div>
+        {% if profile_data.bio %}
+          <p class="profile-hero-bio">{{ profile_data.bio }}</p>
+        {% endif %}
+      </div>
+      <button type="button" class="btn btn-outline btn-sm" id="openSettingsLinkProfile">{{ icon('edit', 'icon icon-sm') }} Edit Profile</button>
+    </div>
+
+    <div class="panel-head" style="margin-top:36px;">
+      <h3>Your Stats</h3>
+    </div>
+    <div class="stat-grid">
+      {% for stat in profile_data.stats %}
+        <div class="glass stat-card">
+          <div class="stat-value">{{ stat.value }}</div>
+          <div class="stat-label">{{ stat.label }}</div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if progress %}
+    <div class="panel-head" style="margin-top:8px;">
+      <h3>Reputation Progress</h3>
+    </div>
+    <div class="glass rank-progress-card">
+      <div class="rank-progress-row">
+        <div class="rank-progress-current">
+          <span class="reputation-badge" style="--rep-color: {{ progress.current.color }};">
+            {% if progress.current.kind == 'letter' %}
+              <span class="reputation-letter {{ 'filled' if progress.current.filled }}" style="width:32px;height:32px;font-size:16px;">{{ progress.current.letter }}</span>
+            {% else %}
+              {{ icon(progress.current.icon, 'reputation-icon') }}
+            {% endif %}
+          </span>
+          <div>
+            <div class="rank-progress-title">{{ progress.current.rank }}</div>
+            <div class="rank-progress-sub">{{ progress.stat_label }}</div>
+          </div>
+        </div>
+        {% if progress.next_rank %}
+        <div class="rank-progress-next">
+          <div class="rank-progress-sub">Next: <strong>{{ progress.next_rank.rank }}</strong></div>
+          {% if progress.next_rank.need %}<div class="rank-progress-sub">{{ progress.next_rank.need }}</div>{% endif %}
+        </div>
+        {% else %}
+        <div class="rank-progress-next"><div class="rank-progress-sub">Top rank reached 🎉</div></div>
+        {% endif %}
+      </div>
+      {% if progress.progress is not none %}
+      <div class="progress-track">
+        <div class="progress-fill" style="width: {{ (progress.progress * 100)|round(1) }}%; background: {{ progress.next_rank.color if progress.next_rank else progress.current.color }};"></div>
+      </div>
+      {% endif %}
+      <a href="{{ url_for('help_badges') }}" class="rank-progress-link">{{ icon('help-circle', 'icon icon-sm') }} How do badges work?</a>
+    </div>
+    {% endif %}
+
+    {% if my_projects is not none %}
+    <div class="panel-head" style="margin-top:36px;">
+      <h3>My Projects</h3>
+    </div>
+    {% if my_projects %}
+      <div class="project-grid">
+        {% for project in my_projects %}{{ project_card(project, current_user, show_manage=True) }}{% endfor %}
+      </div>
+    {% else %}
+      <div class="glass empty-state">
+        <div class="icon-badge">{{ icon('folder', 'icon icon-lg') }}</div>
+        <h4>No projects yet</h4>
+        <p>Publish your first project to start getting discovered.</p>
+      </div>
+    {% endif %}
+    {% endif %}
+  </main>
+</div>
+
+<nav class="bottom-nav">
+  <a href="{{ url_for(current_user.role + '_dashboard') }}">{{ icon('grid', 'icon icon-sm') }} Home</a>
+  <a href="{{ url_for('browse_projects') }}">{{ icon('compass', 'icon icon-sm') }} Browse</a>
+  <a href="{{ url_for('saved_projects') }}">{{ icon('bookmark', 'icon icon-sm') }} Saved</a>
+  <a href="{{ url_for('messages_page') }}">{{ icon('message', 'icon icon-sm') }} Messages</a>
+  <a href="{{ url_for('profile_page') }}" class="active">{{ icon('user', 'icon icon-sm') }} Profile</a>
+</nav>
+
+{{ project_modal() }}
+{{ settings_modal(current_user) }}
+{{ collaboration_modal() }}
+{{ user_search_modal() }}
+{{ user_profile_modal() }}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

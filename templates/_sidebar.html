@@ -1,0 +1,30 @@
+{% from "_icons.html" import icon %}
+{% macro sidebar(role, active) %}
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="dashSidebar">
+  <div class="sidebar-mobile-head">
+    <a href="{{ url_for('index') }}" class="brand"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Vision"><span>Vision</span></a>
+    <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" title="Close menu">{{ icon('x', 'icon icon-sm') }}</button>
+  </div>
+
+  {% if role == 'builder' %}
+  <a href="{{ url_for('builder_dashboard') }}" class="side-link {{ 'active' if active == 'home' }}">{{ icon('grid', 'icon icon-sm') }} Dashboard</a>
+  <a href="{{ url_for('builder_dashboard') }}#my-projects" class="side-link {{ 'active' if active == 'home' }}">{{ icon('folder', 'icon icon-sm') }} My Projects</a>
+  <a href="{{ url_for('collaboration_requests') }}" class="side-link {{ 'active' if active == 'collaboration_requests' }}">{{ icon('users', 'icon icon-sm') }} Collaboration Requests</a>
+  {% else %}
+  <a href="{{ url_for(role + '_dashboard') }}" class="side-link {{ 'active' if active == 'home' }}">{{ icon('grid', 'icon icon-sm') }} Dashboard</a>
+  {% endif %}
+
+  <a href="{{ url_for('browse_projects') }}" class="side-link {{ 'active' if active == 'browse' }}">{{ icon('compass', 'icon icon-sm') }} Browse Projects</a>
+  <a href="{{ url_for('saved_projects') }}" class="side-link {{ 'active' if active == 'saved' }}">{{ icon('bookmark', 'icon icon-sm') }} Saved Projects</a>
+  <a href="{{ url_for('messages_page') }}" class="side-link {{ 'active' if active == 'messages' }}">{{ icon('message', 'icon icon-sm') }} Messages</a>
+  <a href="{{ url_for('deals_dashboard') }}" class="side-link {{ 'active' if active == 'deals' }}">{{ icon('briefcase', 'icon icon-sm') }} Deal Room</a>
+  <a href="{{ url_for('profile_page') }}" class="side-link {{ 'active' if active == 'profile' }}">{{ icon('user', 'icon icon-sm') }} My Profile</a>
+  <a href="#" class="side-link" id="openSettingsLink">{{ icon('settings', 'icon icon-sm') }} Settings</a>
+
+  <div class="sidebar-footer">
+    <a href="{{ url_for('help_badges') }}" class="side-link {{ 'active' if active == 'help' }}">{{ icon('help-circle', 'icon icon-sm') }} Badges Guide</a>
+    <a href="{{ url_for('logout') }}" class="side-link">{{ icon('log-out', 'icon icon-sm') }} Logout</a>
+  </div>
+</aside>
+{% endmacro %}
