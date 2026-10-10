@@ -203,39 +203,42 @@
     const d = state.deal;
     const v = d.current_version;
     panel.innerHTML = `
-      <div class="dr-status-card">
-        <div>
-          <div style="font-family:'Inter',sans-serif; font-size:12px; color:var(--muted); margin-bottom:6px;">${esc(d.deal_type_label)}</div>
-          <div style="font-family:'Inter',sans-serif; font-weight:700; font-size:17px; color:var(--white);">${esc(d.title)}</div>
+      <div class="dr-status-card dr-accent-${d.status}">
+        <div class="dr-status-icon">${icon((DEAL_TYPE_META[d.deal_type] || {}).icon || 'file-text')}</div>
+        <div class="dr-status-text">
+          <div class="dr-status-type">${esc(d.deal_type_label)}</div>
+          <div class="dr-status-title">${esc(d.title)}</div>
         </div>
         <span class="dr-status-pill dr-status-${d.status}">${esc(d.status)}</span>
       </div>
 
       ${(d.can_start_new || ['Cancelled','Completed'].includes(d.status)) ? `
-        <div class="dr-section" style="border-color: rgba(16,185,129,0.35); display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
-          <div>
-            <h4 style="margin-bottom:4px;">${d.status === 'Cancelled' ? 'This deal was cancelled' : 'This deal is complete'}</h4>
-            <p style="font-size:13px; margin:0;">It stays here in your history — start a brand new contract in this conversation whenever you're ready.</p>
+        <div class="dr-notice ${d.status === 'Cancelled' ? 'danger' : 'success'}">
+          <div class="dr-notice-icon">${icon(d.status === 'Cancelled' ? 'alert-triangle' : 'check-circle')}</div>
+          <div class="dr-notice-body">
+            <h4>${d.status === 'Cancelled' ? 'This deal was cancelled' : 'This deal is complete'}</h4>
+            <p>It stays here in your history — start a brand new contract in this conversation whenever you're ready.</p>
           </div>
           <button class="btn btn-primary btn-sm" id="drRedraftBtn">${icon('sparkles')} Start New Deal</button>
         </div>` : ''}
 
       ${(v && ['Pending','Negotiating'].includes(d.status) && v.created_by && v.created_by.id !== state.myUserId && v.decision !== 'accepted') ? `
-        <div class="dr-section" style="border-color: rgba(59,130,246,0.35); display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
-          <div>
-            <h4 style="color:var(--investor); margin-bottom:4px;">Awaiting your review</h4>
-            <p style="font-size:13px; margin:0;">${esc(v.created_by.name)} sent you Version ${v.version_number} — review it and accept, or send back a counter-offer.</p>
+        <div class="dr-notice info">
+          <div class="dr-notice-icon">${icon('flag')}</div>
+          <div class="dr-notice-body">
+            <h4>Awaiting your review</h4>
+            <p>${esc(v.created_by.name)} sent you Version ${v.version_number} — review it and accept, or send back a counter-offer.</p>
           </div>
           <button class="btn btn-primary btn-sm" id="drReviewBtn">${icon('check-circle')} Review &amp; Decide</button>
         </div>` : ''}
 
       <div class="dr-summary-grid">
+        <div class="dr-summary-item dr-key"><div class="label">Investment</div><div class="value">${money(d.investment_amount, d.currency)}</div></div>
+        <div class="dr-summary-item dr-key"><div class="label">Equity</div><div class="value">${d.equity_percentage != null ? d.equity_percentage + '%' : '—'}</div></div>
+        <div class="dr-summary-item ${d.fairness ? (d.fairness.overall >= 70 ? 'dr-fair-good' : d.fairness.overall >= 40 ? 'dr-fair-warn' : 'dr-fair-bad') : ''}"><div class="label">Fairness</div><div class="value">${d.fairness ? d.fairness.overall + '/100' : 'Not analyzed'}</div></div>
         <div class="dr-summary-item"><div class="label">Startup</div><div class="value">${esc(d.startup_name || '—')}</div></div>
         <div class="dr-summary-item"><div class="label">${d.is_group ? 'Team' : 'Other Party'}</div><div class="value">${esc(d.other_party_name || '—')}</div></div>
-        <div class="dr-summary-item"><div class="label">Investment</div><div class="value">${money(d.investment_amount, d.currency)}</div></div>
-        <div class="dr-summary-item"><div class="label">Equity</div><div class="value">${d.equity_percentage != null ? d.equity_percentage + '%' : '—'}</div></div>
         <div class="dr-summary-item"><div class="label">Version</div><div class="value">V${d.current_version_number}</div></div>
-        <div class="dr-summary-item"><div class="label">Fairness</div><div class="value">${d.fairness ? d.fairness.overall + '/100' : '—'}</div></div>
       </div>
 
       <div class="dr-actions">
@@ -245,7 +248,7 @@
         <button class="btn btn-outline btn-sm" id="drHistoryBtn">${icon('history')} Version History</button>
         <button class="btn btn-outline btn-sm" id="drPdfBtn">${icon('download')} Generate PDF</button>
         ${d.status === 'Signed' ? `<button class="btn btn-outline btn-sm" id="drCompleteBtn">${icon('check-circle')} Mark Completed</button>` : ''}
-        ${!['Signed','Completed','Cancelled'].includes(d.status) ? '<button class="btn btn-ghost btn-sm" id="drCancelBtn" style="color:var(--danger);">Cancel Deal</button>' : ''}
+        ${!['Signed','Completed','Cancelled'].includes(d.status) ? '<button class="btn btn-ghost btn-sm dr-actions-danger" id="drCancelBtn" style="color:var(--danger);">Cancel Deal</button>' : ''}
       </div>
 
       ${d.status === 'Accepted' || d.status === 'Signed' ? renderSignBlock(d) : ''}
@@ -305,10 +308,11 @@
     if (!activities || !activities.length) return '';
     return `
       <div class="dr-activity-list">
+        <h4 class="dr-activity-title">Activity</h4>
         ${activities.slice().reverse().map((a) => `
           <div class="dr-activity-row">
-            <span>${esc(a.actor)} — ${esc((a.detail || a.action).replace(/_/g, ' '))}</span>
-            <span>${new Date(a.created_at).toLocaleDateString()}</span>
+            <span class="dr-activity-text">${esc(a.actor)} — ${esc((a.detail || a.action).replace(/_/g, ' '))}</span>
+            <span class="dr-activity-date">${new Date(a.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </div>`).join('')}
       </div>`;
   }

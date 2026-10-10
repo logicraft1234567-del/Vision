@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Vision — Build Anywhere. Be Discovered Everywhere.{% endblock %}</title>
 <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 {% block extra_head %}{% endblock %}
 </head>
@@ -47,6 +48,7 @@
         <a href="{{ url_for('login') }}" class="btn btn-ghost btn-sm">Login</a>
         <a href="{{ url_for('signup') }}" class="btn btn-primary btn-sm">Sign Up</a>
       {% endif %}
+      <button class="icon-btn theme-toggle" type="button" data-theme-toggle title="Switch to light mode" aria-label="Switch theme">{{ icon('sun', 'icon icon-sm theme-icon-sun') }}{{ icon('moon', 'icon icon-sm theme-icon-moon') }}</button>
       <button class="hamburger" id="hamburgerBtn">{{ icon('menu') }}</button>
     </div>
   </div>

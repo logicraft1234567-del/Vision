@@ -37,15 +37,38 @@ INVESTOR_RANKS = [
 ]
 
 # ---------------------------------------------------------------------------
-# Company — based on company points + verified partnership milestones
+# Company — based on the number of deals closed in the Deal Room
 # ---------------------------------------------------------------------------
+# A deal counts as "closed" once it is Signed or Completed (any deal type:
+# partnership, sponsorship, licensing, investment, etc.). Cancelled, Pending,
+# Negotiating and Accepted deals do not count.
+CLOSED_DEAL_STATUSES = ("Signed", "Completed")
+
 COMPANY_RANKS = [
-    # (min_points, rank title, letter, color hex, filled)
-    (500, "Gold Tier", "C", "#FBBF24", True),
-    (200, "Tier C", "C", "#A855F7", False),
+    # (min_closed_deals, rank title, letter, color hex, filled)
+    (200, "Gold Tier", "C", "#FBBF24", True),
+    (100, "Tier C", "C", "#A855F7", False),
     (50, "Tier B", "B", "#3B82F6", False),
     (0, "Beginner", "A", "#9CA3AF", False),
 ]
+
+
+def count_closed_deals(user):
+    """Number of Deal Room deals this user is a party to that are Signed or Completed."""
+    if user is None:
+        return 0
+    try:
+        # Imported here (not at the top) to avoid a circular import with models.
+        from models import Deal, Conversation, ConversationMember
+        return (
+            Deal.query
+            .join(Conversation, Deal.conversation_id == Conversation.id)
+            .join(ConversationMember, Conversation.id == ConversationMember.conversation_id)
+            .filter(ConversationMember.user_id == user.id, Deal.status.in_(CLOSED_DEAL_STATUSES))
+            .count()
+        )
+    except Exception:
+        return 0
 
 
 def _builder_total_likes(user):
@@ -99,27 +122,16 @@ def get_investor_reputation(engagement_points=0, successful_collaborations=0,
     }
 
 
-def get_company_reputation(company_points=0, verified_partnerships=0):
-    # Gold tier is a milestone (verified partnerships), not just points.
-    if verified_partnerships >= 3:
-        min_points, title, letter, color, filled = COMPANY_RANKS[0]
-        return {
-            "kind": "letter",
-            "letter": letter,
-            "color": color,
-            "filled": filled,
-            "rank": title,
-            "label": f"{title} Company",
-        }
-    for min_points, title, letter, color, filled in COMPANY_RANKS[1:]:
-        if company_points >= min_points:
+def get_company_reputation(closed_deals=0, *_ignored, **_ignored_kw):
+    for min_deals, title, letter, color, filled in COMPANY_RANKS:
+        if closed_deals >= min_deals:
             return {
                 "kind": "letter",
                 "letter": letter,
                 "color": color,
                 "filled": filled,
                 "rank": title,
-                "label": f"{title} Company",
+                "label": f"{title} Company \u2022 {closed_deals} closed deals",
             }
     return {
         "kind": "letter",
@@ -149,11 +161,7 @@ def get_user_reputation(user):
         )
 
     if user.role == "company":
-        profile = getattr(user, "company_profile", None)
-        return get_company_reputation(
-            company_points=getattr(profile, "company_points", 0) or 0,
-            verified_partnerships=getattr(profile, "verified_partnerships", 0) or 0,
-        )
+        return get_company_reputation(count_closed_deals(user))
 
     return None
 
@@ -226,36 +234,27 @@ def get_investor_progress(user):
 
 
 def get_company_progress(user):
-    profile = getattr(user, "company_profile", None)
-    company_points = getattr(profile, "company_points", 0) or 0
-    verified_partnerships = getattr(profile, "verified_partnerships", 0) or 0
-    rep = get_company_reputation(company_points, verified_partnerships)
+    closed_deals = count_closed_deals(user)
+    rep = get_company_reputation(closed_deals)
 
-    ordered = list(reversed(COMPANY_RANKS[1:]))  # Beginner -> Tier B -> Tier C, points-based
+    ordered = list(reversed(COMPANY_RANKS))  # Beginner -> Tier B -> Tier C -> Gold
     next_rank = None
-    for min_points, title, letter, color, filled in ordered:
-        if min_points > company_points and rep["rank"] != "Gold Tier":
-            next_rank = {"rank": title, "letter": letter, "color": color, "threshold": min_points}
+    for min_deals, title, letter, color, filled in ordered:
+        if min_deals > closed_deals:
+            next_rank = {"rank": title, "letter": letter, "color": color, "threshold": min_deals}
             break
-    if rep["rank"] != "Gold Tier" and not next_rank and verified_partnerships < 3:
-        min_points, title, letter, color, filled = COMPANY_RANKS[0]
-        next_rank = {"rank": title, "letter": letter, "color": color, "threshold": None,
-                     "need": "3 verified partnerships", "have": verified_partnerships, "goal": 3}
-
     progress = None
-    if next_rank and next_rank.get("threshold") is not None:
+    if next_rank:
         floor = 0
-        for min_points, *_ in ordered:
-            if min_points <= company_points:
-                floor = min_points
+        for min_deals, *_ in ordered:
+            if min_deals <= closed_deals:
+                floor = min_deals
         span = max(1, next_rank["threshold"] - floor)
-        progress = min(1.0, max(0.0, (company_points - floor) / span))
-    elif next_rank and next_rank.get("goal"):
-        progress = min(1.0, max(0.0, next_rank["have"] / next_rank["goal"]))
+        progress = min(1.0, max(0.0, (closed_deals - floor) / span))
 
     return {
         "current": rep,
-        "stat_label": f"{company_points} company points",
+        "stat_label": f"{closed_deals} closed deals",
         "next_rank": next_rank,
         "progress": progress,
     }
@@ -293,10 +292,9 @@ def help_badge_data():
         {"rank": "Beginner", "kind": "icon", "icon": "bike", "color": "#C0C0C0", "requirement": "New investor"},
     ]
     company_rows = [
-        {"rank": "Gold Tier", "kind": "letter", "letter": "C", "color": "#FBBF24", "filled": True, "requirement": "3+ verified partnerships"},
-        {"rank": "Tier C", "kind": "letter", "letter": "C", "color": "#A855F7", "filled": False, "requirement": "200+ company points"},
-        {"rank": "Tier B", "kind": "letter", "letter": "B", "color": "#3B82F6", "filled": False, "requirement": "50+ company points"},
-        {"rank": "Beginner", "kind": "letter", "letter": "A", "color": "#9CA3AF", "filled": False, "requirement": "New company"},
+        {"rank": title, "kind": "letter", "letter": letter, "color": color, "filled": filled,
+         "requirement": "New company" if min_deals == 0 else f"{min_deals:,}+ closed deals in the Deal Room"}
+        for min_deals, title, letter, color, filled in COMPANY_RANKS
     ]
     return {
         "builder": builder_rows,

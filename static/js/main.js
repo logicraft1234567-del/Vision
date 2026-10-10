@@ -139,10 +139,10 @@ function initMobileMenu() {
     links.style.top = '70px';
     links.style.left = '0';
     links.style.right = '0';
-    links.style.background = 'rgba(11,15,25,0.97)';
+    links.style.background = 'rgba(var(--bg-rgb), 0.97)';
     links.style.padding = '24px 32px';
     links.style.gap = '18px';
-    links.style.borderBottom = '1px solid #1F2937';
+    links.style.borderBottom = '1px solid var(--border)';
   });
 }
 

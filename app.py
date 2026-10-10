@@ -18,7 +18,7 @@ from sqlalchemy import or_
 
 from config import Config
 from database import db
-from reputation import reputation_to_dict, get_reputation_progress, help_badge_data
+from reputation import reputation_to_dict, get_reputation_progress, help_badge_data, count_closed_deals
 from languages import LANGUAGES, LANGUAGE_LOOKUP, BUILDER_TYPE_META
 from models import (
     User, BuilderProfile, InvestorProfile, CompanyProfile,
@@ -1243,8 +1243,7 @@ def _user_profile_payload(user):
     elif user.role == "company" and user.company_profile:
         p = user.company_profile
         stats = [
-            {"label": "Company Points", "value": p.company_points or 0},
-            {"label": "Verified Partnerships", "value": p.verified_partnerships or 0},
+            {"label": "Closed Deals", "value": count_closed_deals(user)},
         ]
 
     return {
@@ -2357,7 +2356,7 @@ def deals_dashboard():
             ("Negotiations", [d for d in deals if d.status == "Negotiating"]),
             ("Contracts Waiting Review", [d for d in deals if d.status == "Accepted" and not d.has_signed(current_user.id)]),
             ("Active Agreements", [d for d in deals if d.status == "Signed"]),
-            ("Completed Deals", [d for d in deals if d.status in ("Completed", "Cancelled")]),
+            ("Completed & Cancelled", [d for d in deals if d.status in ("Completed", "Cancelled")]),
         ]
     elif current_user.role == "investor":
         groups = [

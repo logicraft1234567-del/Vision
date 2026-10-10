@@ -7,7 +7,7 @@
   gap: 4px;
   padding: 4px;
   margin: 0 0 14px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(var(--ink-rgb), 0.03);
   border: 1px solid var(--border);
   border-radius: 14px;
   width: fit-content;
@@ -29,7 +29,7 @@
 }
 .convo-tab.active {
   background: linear-gradient(135deg, var(--primary), var(--cyan));
-  color: #05140F;
+  color: var(--on-primary);
 }
 .convo-tab .dr-badge-dot {
   width: 7px; height: 7px; border-radius: 50%; background: var(--danger);
@@ -45,27 +45,51 @@
 
 /* ---- Status + summary card ---- */
 .dr-status-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 14px;
+  --accent: var(--muted);
+  position: relative;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 20px 22px 20px 28px;
+  margin-bottom: 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px 20px;
-  margin-bottom: 18px;
-  background: rgba(255,255,255,0.02);
+  overflow: hidden;
+  background: rgba(var(--ink-rgb), 0.03);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, transparent), rgba(var(--ink-rgb), 0.02) 65%);
 }
-.dr-status-pill {
-  font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  padding: 6px 14px;
-  border-radius: 999px;
+.dr-status-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent);
+}
+.dr-accent-Pending { --accent: var(--muted); }
+.dr-accent-Negotiating { --accent: var(--hardware); }
+.dr-accent-Accepted { --accent: var(--investor); }
+.dr-accent-Signed, .dr-accent-Completed { --accent: var(--primary); }
+.dr-accent-Cancelled { --accent: var(--danger); }
+
+.dr-status-icon {
+  width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent);
+  background: rgba(var(--ink-rgb), 0.05);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   border: 1px solid var(--border);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
 }
+.dr-status-icon svg { width: 22px; height: 22px; }
+.dr-status-text { flex: 1; min-width: 160px; }
+.dr-status-type {
+  font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 4px;
+}
+.dr-status-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 18px; color: var(--white); overflow-wrap: anywhere; }
+
+.dr-status-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: 'Inter', sans-serif; font-size: 11.5px; font-weight: 700;
+  letter-spacing: 0.4px; text-transform: uppercase;
+  padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border);
+  white-space: nowrap;
+}
+.dr-status-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .dr-status-Pending { color: var(--muted); }
 .dr-status-Negotiating { color: var(--hardware); border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.08); }
 .dr-status-Accepted { color: var(--investor); border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.08); }
@@ -73,31 +97,78 @@
 .dr-status-Completed { color: var(--primary); border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.12); }
 .dr-status-Cancelled { color: var(--danger); border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.08); }
 
+/* ---- Notice banners (cancelled / complete / awaiting review) ---- */
+.dr-notice {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 16px 18px; margin-bottom: 16px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: rgba(var(--ink-rgb), 0.02);
+}
+.dr-notice-icon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(var(--ink-rgb), 0.06); color: var(--muted);
+}
+.dr-notice-body { flex: 1; min-width: 200px; }
+.dr-notice-body h4 { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; margin: 0 0 3px; color: var(--white); }
+.dr-notice-body p { font-size: 13px; margin: 0; }
+.dr-notice.success { border-color: rgba(16,185,129,0.35); background: rgba(16,185,129,0.06); }
+.dr-notice.success .dr-notice-icon { background: rgba(16,185,129,0.15); color: var(--primary); }
+.dr-notice.danger { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+.dr-notice.danger .dr-notice-icon { background: rgba(239,68,68,0.14); color: var(--danger); }
+.dr-notice.info { border-color: rgba(59,130,246,0.35); background: rgba(59,130,246,0.06); }
+.dr-notice.info .dr-notice-icon { background: rgba(59,130,246,0.15); color: var(--investor); }
+.dr-notice.info h4 { color: var(--investor); }
+
+/* ---- Key terms ---- */
 .dr-summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 14px;
-  margin-bottom: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
 }
-.dr-summary-item { border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; }
-.dr-summary-item .label { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
-.dr-summary-item .value { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); }
+.dr-summary-item {
+  border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px;
+  background: rgba(var(--ink-rgb), 0.02); min-width: 0;
+}
+.dr-summary-item .label {
+  font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.dr-summary-item .value { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); overflow-wrap: anywhere; }
+.dr-summary-item.dr-key {
+  background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(6,182,212,0.05));
+  border-color: rgba(16,185,129,0.25);
+}
+.dr-summary-item.dr-key .value { font-size: 22px; letter-spacing: -0.3px; }
+.dr-fair-good .value { color: var(--primary); }
+.dr-fair-warn .value { color: var(--hardware); }
+.dr-fair-bad .value { color: var(--danger); }
 
-.dr-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+/* ---- Actions ---- */
+.dr-actions {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 14px; margin-bottom: 20px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: rgba(var(--ink-rgb), 0.02);
+}
 .dr-actions .btn { font-size: 13px; }
+.dr-actions .btn[disabled] { opacity: 0.4; cursor: not-allowed; transform: none; pointer-events: none; }
+.dr-actions .dr-actions-danger { margin-left: auto; }
 
 .dr-empty {
   text-align: center;
-  padding: 56px 20px;
+  padding: 60px 24px;
   border: 1.5px dashed var(--border);
   border-radius: var(--radius-lg);
+  background: radial-gradient(circle at 50% 0%, rgba(16,185,129,0.07), transparent 60%);
 }
-.dr-empty h4 { margin: 14px 0 6px; color: var(--white); }
-.dr-empty p { max-width: 380px; margin: 0 auto 18px; font-size: 13px; }
+.dr-empty h4 { margin: 14px 0 6px; color: var(--white); font-size: 17px; }
+.dr-empty p { max-width: 400px; margin: 0 auto 20px; font-size: 13px; }
 
 /* ---- Wizard modal ---- */
 .dr-modal-overlay {
-  position: fixed; inset: 0; background: rgba(5,8,15,0.72);
+  position: fixed; inset: 0; background: rgba(var(--scrim-rgb), 0.72);
   backdrop-filter: blur(6px); z-index: 300; display: none;
   align-items: center; justify-content: center; padding: 20px;
 }
@@ -105,7 +176,7 @@
 .dr-modal {
   width: 100%; max-width: 720px; max-height: 88vh; overflow-y: auto;
   background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
-  box-shadow: 0 30px 80px rgba(0,0,0,0.5); padding: 28px;
+  box-shadow: 0 30px 80px rgba(var(--shadow-rgb), 0.5); padding: 28px;
 }
 .dr-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .dr-modal-head h3 { font-size: 19px; margin: 0; }
@@ -136,7 +207,7 @@
   color: var(--muted); margin-bottom: 6px;
 }
 .dr-field input, .dr-field select, .dr-field textarea {
-  width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  width: 100%; background: rgba(var(--ink-rgb), 0.03); border: 1px solid var(--border);
   border-radius: 10px; padding: 10px 12px; color: var(--white); font-family: 'Inter', sans-serif;
   font-size: 13.5px;
 }
@@ -162,7 +233,7 @@
 .dr-clause-toggle { margin: 22px 0 14px; }
 .dr-clause-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 12px; }
 .dr-clause-legal, .dr-clause-plain { padding: 14px 16px; }
-.dr-clause-legal { border-right: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+.dr-clause-legal { border-right: 1px solid var(--border); background: rgba(var(--ink-rgb), 0.02); }
 .dr-clause-plain { background: rgba(16,185,129,0.04); }
 .dr-clause-label { font-family: 'Inter', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); margin-bottom: 6px; }
 .dr-clause-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 13.5px; color: var(--white); margin-bottom: 6px; }
@@ -242,15 +313,102 @@
 .dr-sign-card.signed .status { color: var(--primary); }
 
 /* ---- Deal Room Dashboard (sidebar page) ---- */
-.deal-dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 14px; }
-.deal-dash-card { display: block; padding: 18px; border-radius: var(--radius); transition: var(--transition); }
-.deal-dash-card:hover { transform: translateY(-3px); border-color: var(--primary); }
-.deal-dash-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.deal-dash-type { font-family: 'Inter', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); }
-.deal-dash-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 15px; color: var(--white); margin-bottom: 6px; }
-.deal-dash-meta { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; }
-.deal-dash-bottom { display: flex; justify-content: space-between; font-family: 'Inter', sans-serif; font-size: 12px; color: var(--white); border-top: 1px solid var(--border); padding-top: 10px; }
+.deal-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 6px 0 22px; }
+.deal-stat { padding: 16px 18px; border-radius: var(--radius); display: flex; flex-direction: column; gap: 6px; }
+.deal-stat-num { font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 800; line-height: 1; color: var(--white); }
+.deal-stat:first-child .deal-stat-num {
+  background: linear-gradient(90deg, var(--primary), var(--cyan));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.deal-stat-label { font-size: 12px; color: var(--muted); }
 
-.dr-activity-list { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 14px; }
-.dr-activity-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 6px 0; color: var(--muted); }
-.dr-activity-row span:first-child { color: var(--white); }
+.deal-filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
+.deal-filters .deal-search { flex: 1 1 240px; max-width: 320px; }
+.deal-filters select { flex: 0 1 200px; }
+
+.deal-group-head { display: flex; align-items: center; gap: 10px; margin: 34px 0 14px; }
+.deal-group-head h3 { font-size: 16px; margin: 0; }
+.deal-group-count {
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700; color: var(--muted);
+  background: rgba(var(--ink-rgb), 0.05); border: 1px solid var(--border); border-radius: 999px; padding: 2px 10px;
+}
+
+.deal-dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.deal-dash-card {
+  --accent: var(--muted);
+  position: relative; display: flex; flex-direction: column; gap: 16px;
+  padding: 22px 20px 18px; border-radius: var(--radius); overflow: hidden;
+  transition: var(--transition);
+}
+.deal-dash-card::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--accent); }
+.deal-dash-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+.deal-dash-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.deal-dash-type { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.deal-dash-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 16px; line-height: 1.3; color: var(--white); overflow-wrap: anywhere; }
+.deal-dash-parties { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.deal-dash-avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 800; color: var(--on-primary);
+  background: linear-gradient(135deg, var(--primary), var(--cyan));
+}
+.deal-dash-avatar.other { background: rgba(var(--ink-rgb), 0.08); color: var(--white); border: 1px solid var(--border); }
+.deal-dash-party { font-size: 13px; color: var(--white); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.deal-dash-link { color: var(--muted); flex-shrink: 0; font-size: 13px; }
+.deal-dash-bottom {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border-top: 1px solid var(--border); padding-top: 14px; margin-top: auto;
+}
+.deal-dash-amount { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); }
+.deal-dash-amount.none { color: var(--muted); font-weight: 500; font-size: 13px; }
+.deal-dash-chips { display: flex; gap: 6px; }
+.deal-dash-chip {
+  font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 999px; padding: 3px 9px; background: rgba(var(--ink-rgb), 0.03);
+}
+.deal-dash-chip.equity { color: var(--primary); border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.08); }
+
+.deal-dash-card.s-Negotiating { --accent: var(--hardware); }
+.deal-dash-card.s-Accepted { --accent: var(--investor); }
+.deal-dash-card.s-Signed, .deal-dash-card.s-Completed { --accent: var(--primary); }
+.deal-dash-card.s-Cancelled { --accent: var(--danger); }
+.deal-dash-card.s-Cancelled .deal-dash-title { color: var(--muted); }
+
+/* ---- Activity timeline ---- */
+.dr-activity-list {
+  margin-top: 22px; padding: 18px 20px 6px;
+  border: 1px solid var(--border); border-radius: var(--radius); background: rgba(var(--ink-rgb), 0.02);
+}
+.dr-activity-title {
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin: 0 0 14px;
+}
+.dr-activity-row { position: relative; display: flex; gap: 12px; align-items: flex-start; padding: 0 0 16px 22px; font-size: 13px; }
+.dr-activity-row::before {
+  content: ''; position: absolute; left: 0; top: 5px; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--card); border: 2px solid var(--primary);
+}
+.dr-activity-row::after {
+  content: ''; position: absolute; left: 4px; top: 18px; bottom: 0; width: 1px; background: var(--border);
+}
+.dr-activity-row:last-child::after { display: none; }
+.dr-activity-text { flex: 1; min-width: 0; color: var(--white); overflow-wrap: anywhere; }
+.dr-activity-date { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+@media (max-width: 600px) {
+  .dr-actions .dr-actions-danger { margin-left: 0; }
+  .deal-dash-grid { grid-template-columns: 1fr; }
+}
+/* ---- Light theme (glass) ---- */
+html[data-theme="light"] .dr-modal-overlay {
+  background: rgba(var(--scrim-rgb), 0.35);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+html[data-theme="light"] .dr-modal {
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+  border-color: rgba(255,255,255,0.85);
+  box-shadow: 0 30px 80px rgba(var(--shadow-rgb), 0.25), inset 0 1px 0 rgba(255,255,255,0.95);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+}
