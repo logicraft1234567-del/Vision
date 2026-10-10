@@ -9,14 +9,22 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 def _resolve_database_uri():
     """Render's Postgres "Internal/External Database URL" is handed to the
     app via the DATABASE_URL env var. Render (and Heroku-style hosts) still
-    hand out that URL with the old `postgres://` scheme, but SQLAlchemy 1.4+
-    / psycopg2 require `postgresql://` — so rewrite it if needed. Falls back
-    to a local sqlite file when DATABASE_URL isn't set (local dev)."""
+    hand out that URL with the old `postgres://` scheme, but SQLAlchemy
+    requires `postgresql://`, so rewrite it if needed.
+
+    SQLAlchemy 2.1+ also treats a bare `postgresql://` URL as the newer
+    `psycopg` (v3) driver. We install `psycopg2-binary`, so the driver is
+    named explicitly (`postgresql+psycopg2://`). Without this the app crashes
+    on import with "ModuleNotFoundError: No module named 'psycopg'".
+
+    Falls back to a local sqlite file when DATABASE_URL isn't set (local dev)."""
     url = os.environ.get("DATABASE_URL")
     if not url:
         return "sqlite:///" + os.path.join(BASE_DIR, "vision.db")
     if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
+        url = "postgresql://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        url = "postgresql+psycopg2://" + url[len("postgresql://"):]
     return url
 
 
