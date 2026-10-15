@@ -1,0 +1,1267 @@
+/* ==========================================================================
+   VISION — Cinematic layer
+   --------------------------------------------------------------------------
+   Loads AFTER style.css / deal-room.css / vision-ai.css / chat-features.css
+   and re-skins them through the existing design tokens. Nothing in those
+   files is deleted, so every page keeps working if this file is removed.
+
+   Specificity note: style.css ships `html[data-theme="light"] .x` overrides
+   (specificity 0,2,1). Where this file needs to beat those, selectors are
+   prefixed with `:root:root` (0,3,0) and read their colours from the --vx-*
+   tokens below, so ONE rule serves both themes.
+
+   Sections
+     1  Tokens (dark + light)
+     2  Base, typography, focus
+     3  Ambient cinematic background
+     4  Glass system
+     5  Liquid buttons + other buttons
+     6  Forms
+     7  Navbar (landing / auth)
+   ========================================================================== */
+
+@property --vx-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
+/* ==========================================================================
+   1. Tokens
+   ========================================================================== */
+:root {
+  /* Re-map the original tokens: deeper midnight, readable muted text,
+     hairline borders. Light theme re-maps them again below (and in style.css). */
+  --bg: #05070F;
+  --bg-rgb: 5, 7, 15;
+  --card: rgba(13, 18, 32, 0.88);
+  --border: rgba(255, 255, 255, 0.10);
+  --muted: #9AA5B8;                 /* ~7:1 on --bg (was #6B7280, ~4:1) */
+  --placeholder: #6E7A8E;
+  --radius: 22px;
+  --radius-lg: 30px;
+  --on-primary: #03140E;
+
+  /* Brand + AI accents */
+  --vx-emerald: #10B981;
+  --vx-cyan: #06B6D4;
+  --vx-blue: #3B82F6;
+  --vx-violet: #8B5CF6;
+  --vx-ai: linear-gradient(135deg, #8B5CF6 0%, #6366F1 50%, #3B82F6 100%);
+  --vx-brand: linear-gradient(120deg, #34D399 0%, #22D3EE 55%, #60A5FA 100%);
+
+  /* Motion */
+  --vx-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --vx-ease-liquid: cubic-bezier(0.32, 0.92, 0.22, 1);
+
+  /* Glass */
+  --vx-fill: linear-gradient(150deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.028) 48%, rgba(255,255,255,0.05) 100%);
+  --vx-fill-strong: linear-gradient(150deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05));
+  --vx-panel: rgba(10, 14, 26, 0.72);
+  --vx-bar: rgba(10, 14, 26, 0.55);
+  --vx-bar-solid: rgba(10, 14, 26, 0.80);
+  --vx-edge: rgba(255, 255, 255, 0.11);
+  --vx-edge-soft: rgba(255, 255, 255, 0.07);
+  --vx-edge-hover: rgba(52, 211, 153, 0.45);
+  --vx-field: rgba(255, 255, 255, 0.045);
+  --vx-field-focus: rgba(16, 185, 129, 0.07);
+  --vx-shadow: 0 1px 0 rgba(255,255,255,0.10) inset, 0 28px 70px -30px rgba(0,0,0,0.8), 0 6px 18px -8px rgba(0,0,0,0.5);
+  --vx-shadow-hover: 0 1px 0 rgba(255,255,255,0.14) inset, 0 34px 80px -28px rgba(0,0,0,0.85), 0 0 60px -18px rgba(16,185,129,0.35);
+  --vx-blur: blur(22px) saturate(160%);
+  --vx-blur-sm: blur(12px) saturate(140%);
+  --vx-sheen: rgba(255, 255, 255, 0.10);
+  --vx-light-rgb: 52, 211, 153;     /* pointer-light colour on cards */
+  --vx-canvas: #05070F;
+  --vx-vignette: radial-gradient(130% 100% at 50% 35%, transparent 45%, rgba(2,4,10,0.62) 100%);
+  --vx-grid-line: rgba(255, 255, 255, 0.035);
+  --vx-wave-text: #03140E;          /* text colour once the liquid has filled the button */
+  --vx-btn-text: #E8FFF6;
+  --vx-btn-surface: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02)), rgba(6, 22, 22, 0.62);
+  --vx-btn-edge: rgba(52, 211, 153, 0.50);
+  --vx-liquid: linear-gradient(115deg, #10B981 0%, #06B6D4 46%, #3B82F6 100%);
+  --vx-liquid-back: linear-gradient(115deg, #34D399 0%, #67E8F9 50%, #93C5FD 100%);
+}
+
+:root[data-theme="light"] {
+  --bg: #EAF1FB;
+  --bg-rgb: 240, 245, 252;
+  --card: rgba(255, 255, 255, 0.88);
+  --border: rgba(15, 23, 42, 0.10);
+  --muted: #4B5870;
+  --placeholder: #7A869B;
+  --on-primary: #FFFFFF;
+
+  --vx-fill: linear-gradient(150deg, rgba(255,255,255,0.84), rgba(255,255,255,0.50));
+  --vx-fill-strong: linear-gradient(150deg, rgba(255,255,255,0.94), rgba(255,255,255,0.70));
+  --vx-panel: rgba(255, 255, 255, 0.78);
+  --vx-bar: rgba(255, 255, 255, 0.58);
+  --vx-bar-solid: rgba(255, 255, 255, 0.86);
+  --vx-edge: rgba(255, 255, 255, 0.90);
+  --vx-edge-soft: rgba(15, 23, 42, 0.07);
+  --vx-edge-hover: rgba(5, 150, 105, 0.50);
+  --vx-field: rgba(255, 255, 255, 0.70);
+  --vx-field-focus: rgba(255, 255, 255, 0.96);
+  --vx-shadow: 0 1px 0 rgba(255,255,255,0.95) inset, 0 0 0 1px rgba(15,23,42,0.05), 0 24px 60px -26px rgba(40,60,110,0.32), 0 4px 14px -6px rgba(40,60,110,0.14);
+  --vx-shadow-hover: 0 1px 0 rgba(255,255,255,1) inset, 0 0 0 1px rgba(5,150,105,0.25), 0 30px 70px -26px rgba(40,60,110,0.38), 0 0 50px -16px rgba(5,150,105,0.35);
+  --vx-blur: blur(22px) saturate(170%);
+  --vx-sheen: rgba(255, 255, 255, 0.65);
+  --vx-light-rgb: 16, 185, 129;
+  --vx-canvas: linear-gradient(180deg, #F5F9FF 0%, #E8F0FB 100%);
+  --vx-vignette: none;
+  --vx-grid-line: rgba(15, 23, 42, 0.04);
+  --vx-wave-text: #FFFFFF;
+  --vx-btn-text: #064E3B;
+  --vx-btn-surface: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.60));
+  --vx-btn-edge: rgba(5, 150, 105, 0.45);
+  --vx-liquid: linear-gradient(115deg, #047857 0%, #0E7490 46%, #1D4ED8 100%);
+  --vx-liquid-back: linear-gradient(115deg, #10B981 0%, #22D3EE 50%, #60A5FA 100%);
+}
+
+/* ==========================================================================
+   2. Base, typography, focus
+   ========================================================================== */
+html { background: var(--vx-canvas); }
+body {
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+/* legacy light backdrop is replaced by the ambient layer once JS has mounted it */
+html.vx-on[data-theme="light"] body::before { display: none; }
+
+h1, h2, h3 { letter-spacing: -0.03em; }
+h4, h5 { letter-spacing: -0.015em; }
+p { line-height: 1.65; }
+::selection { background: rgba(16, 185, 129, 0.85); color: #03140E; }
+
+.gradient-text {
+  background: var(--vx-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+:root[data-theme="light"] .gradient-text { background-image: linear-gradient(120deg, #047857, #0E7490 55%, #1D4ED8); }
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.95);
+  outline-offset: 3px;
+  border-radius: inherit;
+}
+.field-input:focus-visible, .vision-ai-input-row input:focus-visible { outline: none; }
+
+/* native <select> popups ignore translucent tokens — give them a solid surface */
+select option, select optgroup { background: #0E1321; color: #F4F7FB; }
+:root[data-theme="light"] select option, :root[data-theme="light"] select optgroup { background: #FFFFFF; color: #0F172A; }
+
+/* ==========================================================================
+   3. Ambient cinematic background  (elements injected by cinematic.js)
+   Only `transform` is animated, so the layers stay on the compositor.
+   ========================================================================== */
+.vx-ambient {
+  position: fixed; inset: 0; z-index: -1;
+  pointer-events: none; overflow: hidden; contain: strict;
+}
+.vx-aurora {
+  position: absolute; inset: -28%;
+  background:
+    radial-gradient(36% 32% at 16% 20%, rgba(16, 185, 129, 0.30), transparent 70%),
+    radial-gradient(32% 34% at 84% 14%, rgba(6, 182, 212, 0.24), transparent 70%);
+  animation: vxDriftA 46s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.vx-aurora-b {
+  background:
+    radial-gradient(38% 38% at 78% 86%, rgba(139, 92, 246, 0.26), transparent 70%),
+    radial-gradient(30% 30% at 10% 82%, rgba(59, 130, 246, 0.20), transparent 70%),
+    radial-gradient(22% 22% at 52% 52%, rgba(6, 182, 212, 0.08), transparent 70%);
+  animation: vxDriftB 61s ease-in-out infinite alternate;
+}
+:root[data-theme="light"] .vx-aurora { opacity: 0.85; }
+:root[data-theme="light"] .vx-aurora-b { opacity: 0.75; }
+.vx-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--vx-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--vx-grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(85% 70% at 50% 28%, #000 15%, transparent 78%);
+  mask-image: radial-gradient(85% 70% at 50% 28%, #000 15%, transparent 78%);
+}
+.vx-ambient::after { content: ''; position: absolute; inset: 0; background: var(--vx-vignette); }
+.vx-spot {
+  position: absolute; left: 0; top: 0; width: 680px; height: 680px; margin: -340px 0 0 -340px;
+  background: radial-gradient(circle, rgba(var(--vx-light-rgb), 0.13), rgba(6, 182, 212, 0.05) 42%, transparent 68%);
+  opacity: 0; transition: opacity 0.8s ease; will-change: transform;
+}
+.vx-spot.on { opacity: 1; }
+
+@keyframes vxDriftA {
+  0%   { transform: translate3d(-3%, -2%, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(4%, 3%, 0) rotate(6deg) scale(1.08); }
+  100% { transform: translate3d(-2%, 5%, 0) rotate(-4deg) scale(1.02); }
+}
+@keyframes vxDriftB {
+  0%   { transform: translate3d(3%, 2%, 0) rotate(0deg) scale(1.05); }
+  50%  { transform: translate3d(-4%, -3%, 0) rotate(-8deg) scale(1); }
+  100% { transform: translate3d(2%, -5%, 0) rotate(5deg) scale(1.1); }
+}
+
+/* hero blobs (positioned by main.js parallax) — keep them, but let the ambient layer lead */
+.blob { opacity: 0.22; }
+:root[data-theme="light"] .blob { opacity: 0.32; }
+.blob-1 { background: var(--vx-emerald); }
+.blob-2 { background: var(--vx-cyan); }
+.particle { background: #67E8F9; box-shadow: 0 0 10px rgba(103, 232, 249, 0.9); }
+.particle:nth-child(3n) { background: #34D399; box-shadow: 0 0 10px rgba(52, 211, 153, 0.9); }
+.particle:nth-child(5n) { background: #A78BFA; box-shadow: 0 0 10px rgba(167, 139, 250, 0.9); }
+
+/* ==========================================================================
+   4. Glass system
+   Every .glass surface: translucent fill, hairline edge, inner top highlight,
+   layered shadow, real blur. Hover treatment is opt-in (interactive cards
+   only), so big panels don't glow when the pointer passes over them.
+   ========================================================================== */
+:root:root .glass {
+  position: relative;
+  background: var(--vx-fill);
+  border: 1px solid var(--vx-edge);
+  box-shadow: var(--vx-shadow);
+  -webkit-backdrop-filter: var(--vx-blur-sm);
+  backdrop-filter: var(--vx-blur-sm);
+  border-radius: var(--radius);
+}
+:root:root .glass:hover { border-color: var(--vx-edge); box-shadow: var(--vx-shadow); }
+
+/* interactive cards: pointer-reactive light + lift */
+:root:root .project-card,
+:root:root .problem-card,
+:root:root .ecosystem-card,
+:root:root .guardian-card,
+:root:root .stat-card,
+:root:root .deal-dash-card,
+:root:root .role-card,
+:root:root .request-card,
+:root:root .badge-guide-card {
+  background:
+    radial-gradient(380px circle at var(--mx, 50%) var(--my, -30%), rgba(var(--vx-light-rgb), 0.14), transparent 62%),
+    var(--vx-fill);
+  transition: transform 0.55s var(--vx-ease), border-color 0.4s ease, box-shadow 0.55s var(--vx-ease);
+}
+:root:root .problem-card:hover,
+:root:root .ecosystem-card:hover,
+:root:root .stat-card:hover,
+:root:root .role-card:hover,
+:root:root .request-card:hover,
+:root:root .badge-guide-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--vx-edge-hover);
+  box-shadow: var(--vx-shadow-hover);
+}
+
+/* luminous icon badges: glow follows the icon colour (variants keep their own hue) */
+.icon-badge {
+  background: radial-gradient(circle at 30% 20%, rgba(16, 185, 129, 0.30), rgba(16, 185, 129, 0.07));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 0 26px -8px currentColor;
+}
+
+/* shimmering skeleton (utility — add .vx-skeleton to any placeholder block) */
+.vx-skeleton {
+  position: relative; overflow: hidden; border-radius: 12px;
+  background: rgba(var(--ink-rgb), 0.06); color: transparent !important; pointer-events: none;
+}
+.vx-skeleton::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(var(--ink-rgb), 0.11), transparent);
+  animation: vxShimmer 1.5s ease-in-out infinite;
+}
+@keyframes vxShimmer { to { transform: translateX(100%); } }
+
+/* ==========================================================================
+   5. Buttons
+   --------------------------------------------------------------------------
+   .btn-primary = LIQUID. Two wave layers (::before back, ::after front) sit
+   below the label. On hover/focus they rise from the bottom while a masked
+   SVG wave scrolls sideways and the gradient drifts emerald → cyan → blue.
+   Idle buttons are paused, so they cost nothing.
+   ========================================================================== */
+.btn {
+  position: relative; isolation: isolate; overflow: hidden;
+  font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.005em;
+  border-radius: 15px;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.45s var(--vx-ease), box-shadow 0.45s var(--vx-ease), color 0.3s ease,
+              border-color 0.35s ease, background-color 0.35s ease, opacity 0.3s ease;
+}
+.btn:active { transform: translateY(0) scale(0.97); transition-duration: 0.12s; }
+.btn:disabled, .btn[disabled] { cursor: not-allowed; }
+
+:root {
+  --vx-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 14' preserveAspectRatio='none'%3E%3Cpath d='M0 7C7 7 7 1 14 1S21 7 28 7 35 13 42 13 49 7 56 7V14H0Z'/%3E%3C/svg%3E");
+}
+
+:root:root .btn-primary {
+  color: var(--vx-btn-text);
+  background: var(--vx-btn-surface);
+  border: 1px solid var(--vx-btn-edge);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 10px 28px -12px rgba(16,185,129,0.55);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.btn-primary::before,
+.btn-primary::after {
+  content: ''; position: absolute; left: -2px; right: -2px; top: 0; z-index: -1;
+  height: calc(100% + 16px);
+  pointer-events: none;
+  transform: translate3d(0, 100%, 0);
+  -webkit-mask: var(--vx-wave) 0 0 / 56px 14px repeat-x, linear-gradient(#000 0 0) 0 13px / 100% calc(100% - 13px) no-repeat;
+  mask: var(--vx-wave) 0 0 / 56px 14px repeat-x, linear-gradient(#000 0 0) 0 13px / 100% calc(100% - 13px) no-repeat;
+  animation: vxWaveShift 2.8s linear infinite paused, vxLiquidHue 5.5s ease-in-out infinite alternate paused;
+}
+/* back wave: lighter, slower, opposite direction, rises a beat earlier */
+.btn-primary::before {
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,0.30), transparent 60%),
+    var(--vx-liquid-back);
+  background-size: 100% 100%, 220% 100%;
+  opacity: 0.65;
+  transition: transform 0.95s var(--vx-ease-liquid);
+  animation-duration: 3.9s, 6.5s;
+  animation-direction: reverse, alternate;
+  animation-delay: -1.2s, -2s;
+}
+/* front wave: main liquid + meniscus highlight */
+.btn-primary::after {
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,0.38), transparent 60%),
+    var(--vx-liquid);
+  background-size: 100% 100%, 220% 100%;
+  transition: transform 0.8s var(--vx-ease-liquid) 0.06s;
+}
+
+@media (hover: hover) {
+  .btn-primary:not(:disabled):not([aria-busy="true"]):not(.is-loading):hover::before,
+  .btn-primary:not(:disabled):not([aria-busy="true"]):not(.is-loading):hover::after {
+    transform: translate3d(0, -15px, 0);
+    animation-play-state: running, running;
+  }
+  :root:root .btn-primary:not(:disabled):not([aria-busy="true"]):not(.is-loading):hover {
+    color: var(--vx-wave-text);
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,0.30);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 18px 44px -12px rgba(6,182,212,0.60), 0 0 0 1px rgba(255,255,255,0.08);
+    transition: transform 0.45s var(--vx-ease), box-shadow 0.45s var(--vx-ease), border-color 0.35s ease, color 0.3s ease 0.2s;
+  }
+}
+/* keyboard parity */
+.btn-primary:not(:disabled):not([aria-busy="true"]):not(.is-loading):focus-visible::before,
+.btn-primary:not(:disabled):not([aria-busy="true"]):not(.is-loading):focus-visible::after {
+  transform: translate3d(0, -15px, 0);
+  animation-play-state: running, running;
+}
+:root:root .btn-primary:not(:disabled):focus-visible { color: var(--vx-wave-text); }
+
+/* press: liquid sloshes back down a little */
+.btn-primary:not(:disabled):active::after { transform: translate3d(0, -8px, 0); transition-duration: 0.18s; }
+.btn-primary:not(:disabled):active::before { transform: translate3d(0, -4px, 0); transition-duration: 0.18s; }
+
+/* click ripple (cinematic.js) */
+.vx-ripple-wrap { position: fixed; z-index: 6000; overflow: hidden; pointer-events: none; }
+.vx-ripple {
+  position: absolute; z-index: 0; pointer-events: none; border-radius: 50%;
+  width: 12px; height: 12px; margin: -6px 0 0 -6px;
+  background: radial-gradient(circle, rgba(255,255,255,0.65), rgba(255,255,255,0) 70%);
+  transform: scale(0); opacity: 0.9;
+  animation: vxRipple 0.65s var(--vx-ease) forwards;
+}
+@keyframes vxRipple { to { transform: scale(18); opacity: 0; } }
+
+@keyframes vxWaveShift {
+  to { -webkit-mask-position: 56px 0, 0 13px; mask-position: 56px 0, 0 13px; }
+}
+@keyframes vxLiquidHue {
+  from { background-position: 0 0, 0% 0; }
+  to   { background-position: 0 0, 100% 0; }
+}
+
+/* disabled + loading: visibly inert, no liquid, no glow */
+:root:root .btn-primary:disabled,
+:root:root .btn-primary[disabled],
+:root:root .btn-primary[aria-busy="true"],
+:root:root .btn-primary.is-loading {
+  color: var(--muted);
+  background: rgba(var(--ink-rgb), 0.06);
+  border: 1px dashed rgba(var(--ink-rgb), 0.22);
+  box-shadow: none; transform: none; opacity: 0.7;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.btn-primary:disabled::before, .btn-primary:disabled::after,
+.btn-primary[aria-busy="true"]::before, .btn-primary[aria-busy="true"]::after,
+.btn-primary.is-loading::before, .btn-primary.is-loading::after { display: none; }
+.btn.is-loading { pointer-events: none; }
+.btn.is-loading::before { display: none; }
+.btn-primary.is-loading > * { opacity: 0.55; }
+
+/* secondary: quiet glass */
+:root:root .btn-outline {
+  color: var(--white);
+  background: var(--vx-field);
+  border: 1px solid var(--vx-edge);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  -webkit-backdrop-filter: var(--vx-blur-sm);
+  backdrop-filter: var(--vx-blur-sm);
+}
+:root[data-theme="light"] .btn-outline { border-color: rgba(15, 23, 42, 0.14); }
+:root:root .btn-outline:hover {
+  transform: translateY(-2px);
+  border-color: var(--vx-edge-hover);
+  background: rgba(16, 185, 129, 0.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 30px -14px rgba(16,185,129,0.5);
+}
+:root:root .btn-ghost:hover { background: rgba(var(--ink-rgb), 0.05); }
+.btn-ghost { border-radius: 12px; }
+:root:root .btn-danger { background: rgba(239,68,68,0.10); border-color: rgba(239,68,68,0.32); color: var(--danger-text, #F87171); }
+:root:root .btn-danger:hover { background: rgba(239,68,68,0.20); border-color: rgba(239,68,68,0.55); box-shadow: 0 10px 28px -14px rgba(239,68,68,0.6); }
+.btn-outline:disabled, .btn-danger:disabled, .btn-ghost:disabled { opacity: 0.45; }
+.btn-sm { border-radius: 12px; }
+
+/* icon buttons, chips, FABs */
+:root:root .icon-btn {
+  background: var(--vx-field);
+  border: 1px solid var(--vx-edge);
+  border-radius: 14px;
+  -webkit-backdrop-filter: var(--vx-blur-sm);
+  backdrop-filter: var(--vx-blur-sm);
+}
+:root:root .icon-btn:hover { color: var(--white); border-color: var(--vx-edge-hover); box-shadow: 0 8px 24px -12px rgba(16,185,129,0.6); transform: translateY(-1px); }
+.filter-chip {
+  background: var(--vx-field); border: 1px solid var(--vx-edge); cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: all 0.35s var(--vx-ease);
+  -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm);
+}
+.filter-chip:hover { color: var(--white); border-color: var(--vx-edge-hover); transform: translateY(-1px); }
+.filter-chip.active {
+  color: var(--white);
+  background: linear-gradient(135deg, rgba(16,185,129,0.28), rgba(6,182,212,0.18));
+  border-color: rgba(52,211,153,0.55);
+  box-shadow: 0 0 24px -8px rgba(16,185,129,0.7), inset 0 1px 0 rgba(255,255,255,0.14);
+}
+.mobile-fab-create {
+  background: var(--vx-liquid);
+  box-shadow: 0 12px 32px -8px rgba(6,182,212,0.6), inset 0 1px 0 rgba(255,255,255,0.4);
+  transition: transform 0.4s var(--vx-ease), box-shadow 0.4s var(--vx-ease);
+}
+.mobile-fab-create:active { transform: scale(0.92); }
+
+/* ==========================================================================
+   6. Forms
+   ========================================================================== */
+:root:root .field-input,
+:root:root .search-bar {
+  background: var(--vx-field);
+  border: 1px solid var(--vx-edge-soft);
+  border-color: rgba(var(--ink-rgb), 0.12);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.12);
+  -webkit-backdrop-filter: var(--vx-blur-sm);
+  backdrop-filter: var(--vx-blur-sm);
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.4s var(--vx-ease);
+}
+:root[data-theme="light"] .field-input, :root[data-theme="light"] .search-bar { box-shadow: inset 0 1px 2px rgba(15,23,42,0.05); }
+:root:root .field-input:focus,
+:root:root .search-bar:focus-within {
+  border-color: rgba(52, 211, 153, 0.75);
+  background: var(--vx-field-focus);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.14), 0 0 34px -8px rgba(16, 185, 129, 0.55);
+}
+.field-group label { font-size: 12.5px; letter-spacing: 0.01em; }
+.field-input { border-radius: 14px; }
+select.field-input {
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239AA5B8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
+}
+.search-bar { border-radius: 16px; }
+.toggle { background: rgba(var(--ink-rgb), 0.16); }
+.toggle.on { background: var(--vx-liquid); box-shadow: 0 0 18px -4px rgba(16,185,129,0.7); }
+.upload-drop { border-radius: 18px; background: var(--vx-field); border-color: rgba(var(--ink-rgb), 0.18); }
+.upload-drop:hover { border-color: rgba(52,211,153,0.7); background: rgba(16,185,129,0.06); }
+
+/* ==========================================================================
+   7. Navbar — floating glass bar (landing + auth pages)
+   ========================================================================== */
+:root:root .navbar {
+  padding: 14px 0; background: transparent; border-bottom: 0; box-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:root:root .navbar.scrolled { padding: 10px 0; background: transparent; border-bottom: 0; box-shadow: none; }
+.navbar .container {
+  width: calc(100% - 28px); max-width: 1180px; padding: 10px 14px 10px 20px;
+  border-radius: 22px; background: var(--vx-bar); border: 1px solid var(--vx-edge);
+  box-shadow: var(--vx-shadow);
+  -webkit-backdrop-filter: var(--vx-blur); backdrop-filter: var(--vx-blur);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+.navbar.scrolled .container { background: var(--vx-bar-solid); }
+.brand img { filter: drop-shadow(0 0 14px rgba(16,185,129,0.55)); }
+.nav-links a { padding: 6px 2px; }
+.nav-links a::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 2px;
+  background: var(--vx-brand); transform: scaleX(0); transform-origin: left; transition: transform 0.45s var(--vx-ease);
+}
+.nav-links a:hover::after { transform: scaleX(1); }
+/* main.js opens the mobile menu with inline styles — restyle it as a glass sheet */
+:root:root .nav-links[style] {
+  top: calc(100% + 10px) !important; padding: 20px 24px !important; gap: 16px !important;
+  border: 1px solid var(--vx-edge) !important; border-radius: 22px !important;
+  background: var(--vx-bar-solid) !important;
+  box-shadow: var(--vx-shadow) !important;
+  -webkit-backdrop-filter: var(--vx-blur); backdrop-filter: var(--vx-blur);
+}
+
+/* ==========================================================================
+   Sections
+     8   Dashboard shell (sidebar, topbar, headings, stats)
+     9   Project cards
+     10  Modals, popovers, notifications, toasts
+     11  Messaging
+     12  VISION AI
+     13  Deal Room
+   ========================================================================== */
+
+/* ==========================================================================
+   8. Dashboard shell
+   ========================================================================== */
+.sidebar-mobile-head { display: flex; }                 /* brand also shows on desktop */
+.sidebar-mobile-head .brand { margin: 0 0 0 4px; font-size: 21px; }
+
+:root:root .sidebar {
+  background: var(--vx-panel);
+  border-right: 0;
+  border: 1px solid var(--vx-edge);
+  box-shadow: var(--vx-shadow);
+  -webkit-backdrop-filter: var(--vx-blur);
+  backdrop-filter: var(--vx-blur);
+}
+@media (min-width: 769px) {
+  :root:root .sidebar {
+    top: 14px; height: calc(100vh - 28px);
+    margin: 14px 0 14px 14px;
+    border-radius: 26px; padding: 22px 16px;
+  }
+  .sidebar-mobile-head { margin-bottom: 22px; }
+  .dash-main { padding: 28px 40px 60px 36px; }
+}
+.sidebar-footer { border-top-color: var(--vx-edge-soft); }
+
+.side-link { position: relative; border-radius: 14px; transition: background 0.35s ease, color 0.35s ease, transform 0.4s var(--vx-ease); }
+.side-link .icon { transition: color 0.3s ease, transform 0.4s var(--vx-ease); }
+.side-link:hover { transform: translateX(3px); }
+.side-link:hover .icon { transform: scale(1.08); }
+:root:root .side-link.active {
+  color: var(--white);
+  background: linear-gradient(90deg, rgba(16,185,129,0.20), rgba(6,182,212,0.07) 70%, transparent);
+  box-shadow: inset 0 0 0 1px rgba(52,211,153,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.side-link.active .icon { color: var(--primary); filter: drop-shadow(0 0 8px rgba(16,185,129,0.7)); }
+.side-link.active::before {
+  content: ''; position: absolute; left: -16px; top: 22%; bottom: 22%; width: 3px; border-radius: 3px;
+  background: var(--vx-brand); box-shadow: 0 0 14px rgba(16,185,129,0.9);
+}
+
+.dash-topbar { margin-bottom: 30px; }
+.topbar-actions .avatar { box-shadow: 0 0 0 2px rgba(var(--ink-rgb), 0.14), 0 0 0 5px rgba(16,185,129,0.20), 0 8px 22px -6px rgba(16,185,129,0.6); }
+.avatar { box-shadow: inset 0 1px 0 rgba(255,255,255,0.35); }
+.notif-count-badge { box-shadow: 0 0 14px rgba(239,68,68,0.7); }
+
+.welcome-block { margin-bottom: 34px; }
+.welcome-block h2 {
+  font-size: clamp(28px, 3.2vw, 42px); font-weight: 700; line-height: 1.1; letter-spacing: -0.035em;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+}
+.welcome-block p { margin-top: 10px; font-size: 15.5px; max-width: 640px; }
+
+.panel-head { margin-bottom: 20px; }
+.panel-head h3 { font-size: 20px; display: flex; align-items: center; gap: 10px; }
+.panel-head h3 .icon { color: var(--primary); }
+
+.stat-grid { gap: 16px; }
+.stat-card { padding: 22px; overflow: hidden; }
+.stat-card .stat-icon { width: 42px; height: 42px; border-radius: 14px; margin-bottom: 18px; }
+.stat-card .stat-value { font-size: 34px; letter-spacing: -0.04em; line-height: 1; }
+.stat-card .stat-label { font-size: 13px; margin-top: 8px; }
+
+.empty-state { border-style: dashed; border-color: rgba(var(--ink-rgb), 0.16); background: radial-gradient(circle at 50% 0%, rgba(16,185,129,0.09), transparent 62%), var(--vx-fill); }
+:root:root .empty-state { border: 1.5px dashed rgba(var(--ink-rgb), 0.16); }
+.empty-state .icon-badge { width: 64px; height: 64px; border-radius: 20px; }
+.empty-state h4 { font-size: 18px; }
+
+/* reputation / language chips pick up the glass language */
+.reputation-badge, .lang-badge, .builder-type-badge { filter: drop-shadow(0 0 6px rgba(var(--ink-rgb), 0.0)); }
+.profile-hero { padding: 32px; border-radius: var(--radius-lg); }
+.profile-hero-avatar { box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.12), 0 0 0 7px rgba(16,185,129,0.18), 0 18px 44px -10px rgba(16,185,129,0.55); }
+.profile-hero-name h2 { font-size: clamp(24px, 2.6vw, 32px); }
+.progress-track { height: 10px; background: rgba(var(--ink-rgb), 0.08); box-shadow: inset 0 1px 2px rgba(0,0,0,0.25); }
+.progress-fill { box-shadow: 0 0 18px -2px currentColor; position: relative; }
+.badge-guide-card { padding: 26px; }
+
+/* ==========================================================================
+   9. Project cards — floating glass objects
+   ========================================================================== */
+.project-grid { gap: 24px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+
+:root:root .project-card {
+  border-radius: 26px;
+  transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--lift, 0px));
+  transform-style: preserve-3d;
+  transition: transform 0.7s var(--vx-ease), border-color 0.45s ease, box-shadow 0.6s var(--vx-ease);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.project-card.vx-tilting { transition: transform 0.14s ease-out, border-color 0.45s ease, box-shadow 0.6s var(--vx-ease); }
+:root:root .project-card:hover { --lift: -8px; border-color: transparent; box-shadow: var(--vx-shadow-hover); }
+
+/* luminous travelling edge */
+.project-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.2px; z-index: 4; pointer-events: none;
+  background: conic-gradient(from var(--vx-angle), rgba(255,255,255,0.05) 0 35%, #10B981 52%, #06B6D4 68%, #3B82F6 82%, rgba(255,255,255,0.05) 95%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0; transition: opacity 0.5s ease;
+}
+.project-card:hover::before, .project-card:focus-within::before { opacity: 1; animation: vxSpin 5s linear infinite; }
+@keyframes vxSpin { to { --vx-angle: 360deg; } }
+/* reflection that sweeps across on hover */
+.project-card::after {
+  content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: linear-gradient(112deg, transparent 36%, var(--vx-sheen) 49%, transparent 58%);
+  transform: translateX(-130%); transition: transform 1s var(--vx-ease);
+}
+.project-card:hover::after { transform: translateX(130%); }
+
+.project-cover {
+  background:
+    radial-gradient(70% 90% at 20% 10%, rgba(16,185,129,0.30), transparent 65%),
+    radial-gradient(70% 90% at 90% 100%, rgba(139,92,246,0.30), transparent 65%),
+    linear-gradient(135deg, rgba(6,182,212,0.12), rgba(var(--ink-rgb), 0.03));
+}
+.project-cover::after {              /* legibility fade for badges + smooth join with body */
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,0.18) 0%, transparent 38%, rgba(5,7,15,0.38) 100%);
+}
+:root[data-theme="light"] .project-cover::after { background: linear-gradient(180deg, rgba(15,23,42,0.14) 0%, transparent 40%, rgba(255,255,255,0.18) 100%); }
+.project-cover img { transition: transform 1.1s var(--vx-ease); }
+.project-card:hover .project-cover img { transform: scale(1.07); }
+.project-cover > .icon { width: 40px; height: 40px; opacity: 0.55; }
+
+.badge { z-index: 2; border: 1px solid rgba(255,255,255,0.22); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 6px 18px -6px rgba(0,0,0,0.5); letter-spacing: 0.02em; }
+.badge.software { background: rgba(99,102,241,0.72); }
+.badge.hardware { background: rgba(245,158,11,0.88); border-color: rgba(255,255,255,0.35); }
+.badge.collab-badge { background: rgba(6,182,212,0.80); }
+.badge.private-badge { background: rgba(10,14,26,0.82); }
+
+.project-body { padding: 20px 22px 14px; gap: 10px; }
+.project-body h4 { font-size: 18px; line-height: 1.25; letter-spacing: -0.025em; }
+.project-meta { flex-wrap: wrap; row-gap: 4px; }
+.project-overview { font-size: 13.5px; color: var(--muted); }
+.project-footer { padding: 10px 14px 10px 16px; border-top-color: var(--vx-edge-soft); }
+.project-action-btn { min-height: 40px; padding: 0 10px; border-radius: 12px; transition: color 0.3s ease, background 0.3s ease, transform 0.35s var(--vx-ease); }
+.project-action-btn:hover { background: rgba(var(--ink-rgb), 0.07); transform: translateY(-1px); }
+.project-action-btn.liked { text-shadow: 0 0 14px rgba(239,68,68,0.6); }
+.project-action-btn.saved .icon { filter: drop-shadow(0 0 6px rgba(16,185,129,0.8)); }
+.project-collaborators { padding: 0 22px 14px; }
+.collaborator-chip { background: var(--vx-field); border-color: var(--vx-edge-soft); }
+.project-collab-row { padding: 0 22px 20px; }
+.project-card-manage { padding: 14px 22px 20px; border-top-color: var(--vx-edge-soft); }
+.project-card-manage form { display: flex; }
+
+/* ==========================================================================
+   10. Modals, popovers, notifications, toasts
+   ========================================================================== */
+:root:root .modal-overlay,
+:root:root .dr-modal-overlay,
+:root:root .chat-panel-overlay,
+:root:root .forward-modal-overlay,
+:root:root .sidebar-overlay,
+:root:root .vision-ai-overlay {
+  background: radial-gradient(80% 60% at 50% 40%, rgba(16,185,129,0.10), transparent 70%), rgba(var(--scrim-rgb), 0.70);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  backdrop-filter: blur(10px) saturate(130%);
+}
+:root[data-theme="light"] .modal-overlay, :root[data-theme="light"] .dr-modal-overlay, :root[data-theme="light"] .chat-panel-overlay,
+:root[data-theme="light"] .forward-modal-overlay, :root[data-theme="light"] .sidebar-overlay, :root[data-theme="light"] .vision-ai-overlay {
+  background: radial-gradient(80% 60% at 50% 40%, rgba(16,185,129,0.12), transparent 70%), rgba(var(--scrim-rgb), 0.32);
+}
+.modal-overlay.open, .dr-modal-overlay.open { animation: vxFade 0.35s ease both; }
+
+:root:root .modal-box.glass,
+:root:root .dr-modal,
+:root:root .forward-modal,
+:root:root .chat-side-panel,
+:root:root .notif-panel,
+:root:root .emoji-picker-popover,
+:root:root .flash {
+  background: var(--vx-panel);
+  border: 1px solid var(--vx-edge);
+  box-shadow: var(--vx-shadow), 0 40px 100px -30px rgba(0,0,0,0.7);
+  -webkit-backdrop-filter: var(--vx-blur);
+  backdrop-filter: var(--vx-blur);
+}
+:root[data-theme="light"] .modal-box.glass, :root[data-theme="light"] .dr-modal, :root[data-theme="light"] .forward-modal,
+:root[data-theme="light"] .chat-side-panel, :root[data-theme="light"] .notif-panel, :root[data-theme="light"] .emoji-picker-popover,
+:root[data-theme="light"] .flash { box-shadow: var(--vx-shadow), 0 30px 70px -24px rgba(40,60,110,0.30); }
+.modal-box { border-radius: var(--radius-lg); }
+.dr-modal { border-radius: var(--radius-lg); }
+.modal-overlay.open .modal-box, .dr-modal-overlay.open .dr-modal, .forward-modal { animation: vxPop 0.55s var(--vx-ease) both; }
+.chat-side-panel { animation: vxSlideIn 0.5s var(--vx-ease) both; }
+.emoji-picker-popover { animation: vxPop 0.3s var(--vx-ease) both; }
+.modal-header {
+  background: var(--vx-bar-solid); border-bottom-color: var(--vx-edge-soft);
+  -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm);
+}
+.modal-close, .dr-modal-close, .chat-panel-close { transition: color 0.3s ease, transform 0.4s var(--vx-ease); }
+.modal-close:hover, .dr-modal-close:hover, .chat-panel-close:hover { transform: rotate(90deg); }
+
+@keyframes vxFade { from { opacity: 0; } }
+@keyframes vxPop { from { opacity: 0; transform: translateY(26px) scale(0.955); } }
+@keyframes vxSlideIn { from { opacity: 0; transform: translateX(40px); } }
+
+/* notifications dropdown */
+.notif-panel { border-radius: 24px; transform: translateY(-10px) scale(0.97); transform-origin: top right; }
+.notif-panel.open { transform: translateY(0) scale(1); }
+.notif-tab.active { background: linear-gradient(135deg, rgba(16,185,129,0.24), rgba(6,182,212,0.14)); color: var(--white); }
+.notif-list { border-top-color: var(--vx-edge-soft); }
+.notif-item { border-bottom-color: var(--vx-edge-soft); }
+.notif-item.unread { background: linear-gradient(90deg, rgba(16,185,129,0.10), transparent); }
+.notif-item.unread::before { box-shadow: 0 0 10px var(--primary); }
+.notif-item-icon { border-radius: 12px; }
+.notif-empty::before {                /* subtle loading/empty shimmer line */
+  content: ''; display: block; width: 64px; height: 4px; margin: 0 auto 14px; border-radius: 4px;
+  background: linear-gradient(90deg, transparent, rgba(var(--ink-rgb), 0.25), transparent); background-size: 200% 100%;
+  animation: vxBar 1.6s ease-in-out infinite;
+}
+@keyframes vxBar { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* flash + badge toasts */
+.flash { border-radius: 16px; position: relative; overflow: hidden; }
+.flash::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--vx-brand); }
+.flash.error::before { background: linear-gradient(180deg, #F87171, #EF4444); }
+.badge-toast { -webkit-backdrop-filter: var(--vx-blur); backdrop-filter: var(--vx-blur); }
+
+/* ==========================================================================
+   11. Messaging
+   ========================================================================== */
+.messages-shell { border-radius: var(--radius-lg); }
+:root:root .conversation-list { background: rgba(var(--ink-rgb), 0.02); border-right: 1px solid var(--vx-edge-soft); }
+.conversation-item { border-bottom-color: var(--vx-edge-soft); transition: background 0.3s ease; }
+.conversation-item.active { background: linear-gradient(90deg, rgba(16,185,129,0.16), rgba(6,182,212,0.05) 70%, transparent); box-shadow: inset 3px 0 0 var(--primary); }
+.unread-dot { box-shadow: 0 0 12px var(--primary); }
+.conversation-header { border-bottom-color: var(--vx-edge-soft); background: rgba(var(--ink-rgb), 0.02); }
+.conversation-empty .icon-badge { width: 64px; height: 64px; margin-bottom: 14px; }
+.message-bubbles { scroll-behavior: smooth; }
+:root:root .message-bubble.received {
+  background: var(--vx-fill-strong);
+  border: 1px solid var(--vx-edge);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 6px 20px -12px rgba(0,0,0,0.5);
+  border-radius: 18px 18px 18px 5px;
+}
+:root:root .message-bubble.sent {
+  background: linear-gradient(135deg, rgba(16,185,129,0.30), rgba(6,182,212,0.20));
+  border: 1px solid rgba(52,211,153,0.40);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 10px 28px -14px rgba(16,185,129,0.6);
+  border-radius: 18px 18px 5px 18px;
+}
+.message-bubble { animation: vxBubble 0.45s var(--vx-ease) both; padding: 10px 16px; }
+@keyframes vxBubble { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
+:root:root .message-bubble.vision-ai-authored {
+  background: linear-gradient(135deg, rgba(139,92,246,0.18), rgba(59,130,246,0.12));
+  border-color: rgba(139,92,246,0.45); box-shadow: 0 10px 30px -14px rgba(139,92,246,0.6);
+}
+.message-action-btn { -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm); }
+.convo-tabs { background: var(--vx-field); border-color: var(--vx-edge); -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm); }
+.convo-tab { position: relative; overflow: hidden; }
+.convo-tab.active { background: var(--vx-liquid); box-shadow: 0 8px 22px -10px rgba(6,182,212,0.7), inset 0 1px 0 rgba(255,255,255,0.35); color: var(--vx-wave-text); }
+.message-input-row { border-top-color: var(--vx-edge-soft); background: rgba(var(--ink-rgb), 0.02); }
+.attach-btn, .convo-header-icon-btn, .convo-block-btn { background: var(--vx-field); border-color: var(--vx-edge); transition: all 0.35s var(--vx-ease); }
+.convo-header-icon-btn:hover, .attach-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 22px -12px rgba(16,185,129,0.7); }
+.typing-indicator-dots span { box-shadow: 0 0 8px var(--primary); }
+.chat-side-panel { border-left-color: var(--vx-edge); }
+.starred-item, .group-member-row { border-color: var(--vx-edge-soft); }
+.starred-item { background: var(--vx-field); }
+
+/* ==========================================================================
+   12. VISION AI — violet/blue identity (AI only)
+   ========================================================================== */
+.vision-ai-fab {
+  width: 60px; height: 60px; overflow: visible;
+  background: radial-gradient(circle at 30% 24%, #C4B5FD 0%, #8B5CF6 38%, #4F46E5 72%, #3B82F6 100%);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.45), inset 0 -8px 18px rgba(30,27,75,0.35), 0 12px 36px -6px rgba(124,92,246,0.7);
+}
+.vision-ai-fab svg { position: relative; z-index: 2; filter: drop-shadow(0 0 8px rgba(255,255,255,0.7)); }
+.vision-ai-fab::before {            /* breathing aura */
+  content: ''; position: absolute; inset: -14px; border-radius: 50%; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle, transparent 0 64%, rgba(139,92,246,0.60) 71%, rgba(59,130,246,0.24) 86%, transparent 100%);
+  animation: vxAura 3.8s ease-in-out infinite;
+}
+.vision-ai-fab::after {             /* thin orbiting ring */
+  content: ''; position: absolute; inset: -5px; border-radius: 50%; pointer-events: none; padding: 1.5px;
+  background: conic-gradient(from var(--vx-angle), transparent 0 55%, rgba(196,181,253,0.95) 75%, rgba(96,165,250,0.95) 90%, transparent);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: vxSpin 6s linear infinite;
+}
+@keyframes vxAura { 0%, 100% { transform: scale(0.92); opacity: 0.7; } 50% { transform: scale(1.12); opacity: 1; } }
+
+:root:root .vision-ai-panel {
+  background:
+    radial-gradient(90% 40% at 100% 0%, rgba(139,92,246,0.22), transparent 70%),
+    radial-gradient(70% 40% at 0% 100%, rgba(59,130,246,0.16), transparent 70%),
+    var(--vai-panel, rgba(10,12,26,0.86));
+  border-left: 1px solid rgba(167,139,250,0.28);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+}
+:root[data-theme="light"] .vision-ai-panel {
+  background: radial-gradient(90% 40% at 100% 0%, rgba(139,92,246,0.16), transparent 70%), linear-gradient(160deg, rgba(255,255,255,0.90), rgba(245,243,255,0.78));
+}
+.vision-ai-header { position: relative; overflow: hidden; padding: 24px 22px 18px; border-bottom-color: rgba(167,139,250,0.22); }
+.vision-ai-header::before {          /* ambient energy orb — runs only while the panel is open */
+  content: ''; position: absolute; right: -50px; top: -70px; width: 210px; height: 210px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 35% 35%, rgba(196,181,253,0.65), rgba(99,102,241,0.30) 45%, transparent 70%);
+  filter: blur(12px); opacity: 0.8;
+}
+.vision-ai-panel.open .vision-ai-header::before { animation: vxOrb 9s ease-in-out infinite; }
+@keyframes vxOrb { 0%, 100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(-24px, 18px, 0) scale(1.15); } }
+.vision-ai-header > * { position: relative; z-index: 1; }
+.vision-ai-title h3 { font-size: 19px; letter-spacing: 0.04em; }
+.vision-ai-title svg { filter: drop-shadow(0 0 8px rgba(139,92,246,0.9)); }
+.vision-ai-close { border-radius: 10px; transition: transform 0.4s var(--vx-ease), color 0.3s ease; }
+.vision-ai-close:hover { transform: rotate(90deg); }
+
+.vision-ai-select { border-radius: 14px; -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm); }
+.vision-ai-chip {
+  background: linear-gradient(135deg, rgba(139,92,246,0.14), rgba(59,130,246,0.08));
+  border-color: rgba(167,139,250,0.30);
+  -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+  padding: 8px 14px; min-height: 34px;
+}
+.vision-ai-chip:hover { box-shadow: 0 10px 26px -10px rgba(124,92,246,0.8), inset 0 1px 0 rgba(255,255,255,0.3); color: #fff; }
+
+:root:root .vision-ai-msg-bot p,
+:root:root .vision-ai-msg-bot .vision-ai-msg-content {
+  background: var(--vx-fill-strong); border: 1px solid rgba(167,139,250,0.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  border-radius: 18px 18px 18px 5px;
+}
+.vision-ai-msg-user p { border-radius: 18px 18px 5px 18px; box-shadow: 0 12px 28px -12px rgba(99,102,241,0.8), inset 0 1px 0 rgba(255,255,255,0.3); }
+.vision-ai-msg { animation: vxBubble 0.5s var(--vx-ease) both; }
+.vision-ai-card {
+  background: linear-gradient(160deg, rgba(139,92,246,0.10), rgba(var(--ink-rgb), 0.03));
+  border-color: rgba(167,139,250,0.26); border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 34px -20px rgba(0,0,0,0.6);
+}
+.vision-ai-card--green { background: linear-gradient(160deg, rgba(52,211,153,0.10), rgba(var(--ink-rgb), 0.03)); }
+.vision-ai-card--red   { background: linear-gradient(160deg, rgba(248,113,113,0.10), rgba(var(--ink-rgb), 0.03)); }
+.vision-ai-card--blue  { background: linear-gradient(160deg, rgba(96,165,250,0.10), rgba(var(--ink-rgb), 0.03)); }
+.vision-ai-card--amber { background: linear-gradient(160deg, rgba(251,191,36,0.10), rgba(var(--ink-rgb), 0.03)); }
+.vai-score-number { text-shadow: 0 0 28px rgba(139,92,246,0.55); }
+
+/* thinking state: pulsing glass pill with a travelling light */
+.vision-ai-shimmer, .vision-ai-typing {
+  position: relative; overflow: hidden;
+  background: linear-gradient(110deg, rgba(139,92,246,0.10) 30%, rgba(139,92,246,0.26) 50%, rgba(139,92,246,0.10) 70%);
+  background-size: 220% 100%; animation: vxThink 1.8s linear infinite;
+}
+.vision-ai-shimmer span { box-shadow: 0 0 10px var(--vai-purple); }
+@keyframes vxThink { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+
+.vision-ai-input-row { padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px)); }
+.vision-ai-input-row input { transition: border-color 0.3s ease, box-shadow 0.45s var(--vx-ease), background 0.3s ease; }
+.vision-ai-input-row input:focus {
+  border-color: rgba(167,139,250,0.9);
+  box-shadow: 0 0 0 4px rgba(139,92,246,0.18), 0 0 40px -6px rgba(139,92,246,0.65);
+  background: rgba(139,92,246,0.08);
+}
+.vision-ai-send { box-shadow: 0 10px 24px -8px rgba(99,102,241,0.9), inset 0 1px 0 rgba(255,255,255,0.4); transition: transform 0.4s var(--vx-ease), box-shadow 0.4s ease; }
+.vision-ai-send:hover { transform: scale(1.1) rotate(-6deg); box-shadow: 0 14px 32px -8px rgba(99,102,241,1), inset 0 1px 0 rgba(255,255,255,0.5); }
+.mention-tag { text-shadow: 0 0 12px rgba(139,92,246,0.5); }
+
+/* ==========================================================================
+   13. Deal Room — trustworthy, structured, premium
+   Status colours (already defined by deal-room.css) are kept; this adds depth.
+   ========================================================================== */
+.dr-accent-Completed { --accent: var(--cyan); }
+.dr-status-Completed { color: var(--cyan); border-color: rgba(6,182,212,0.45); background: rgba(6,182,212,0.10); }
+.deal-dash-card.s-Completed { --accent: var(--cyan); }
+
+.dr-status-card {
+  border-radius: var(--radius-lg); padding: 24px 26px 24px 32px;
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--vx-edge));
+  box-shadow: var(--vx-shadow), 0 30px 70px -40px var(--accent);
+  -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm);
+}
+.dr-status-card::before { width: 5px; box-shadow: 0 0 22px 2px var(--accent); }
+.dr-status-icon { box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 0 28px -6px var(--accent); }
+.dr-status-title { font-family: 'Sora', sans-serif; font-size: 20px; letter-spacing: -0.02em; }
+.dr-status-pill { -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm); box-shadow: inset 0 1px 0 rgba(255,255,255,0.10); }
+.dr-status-pill::before { box-shadow: 0 0 10px currentColor; }
+.dr-status-Negotiating::before { animation: vxPulseDot 1.8s ease-in-out infinite; }
+@keyframes vxPulseDot { 0%, 100% { box-shadow: 0 0 0 0 currentColor; } 50% { box-shadow: 0 0 0 5px transparent, 0 0 12px currentColor; } }
+
+.dr-summary-item {
+  background: var(--vx-fill); border-color: var(--vx-edge); border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: transform 0.45s var(--vx-ease), border-color 0.35s ease;
+}
+.dr-summary-item:hover { transform: translateY(-2px); border-color: var(--vx-edge-hover); }
+.dr-summary-item.dr-key { background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(6,182,212,0.08)); border-color: rgba(52,211,153,0.35); box-shadow: 0 18px 40px -26px rgba(16,185,129,0.8), inset 0 1px 0 rgba(255,255,255,0.12); }
+.dr-summary-item .value { font-family: 'Sora', sans-serif; }
+
+.dr-actions { background: var(--vx-fill); border-color: var(--vx-edge); box-shadow: var(--vx-shadow); -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm); border-radius: 22px; }
+.dr-actions .btn { font-size: 13px; }
+.dr-empty { background: radial-gradient(circle at 50% 0%, rgba(16,185,129,0.10), transparent 62%), var(--vx-fill); border-color: rgba(var(--ink-rgb), 0.16); }
+
+.dr-type-card { background: var(--vx-field); border-color: var(--vx-edge); border-radius: 18px; transition: transform 0.45s var(--vx-ease), border-color 0.3s ease, box-shadow 0.45s var(--vx-ease), background 0.3s ease; }
+.dr-type-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px -22px rgba(16,185,129,0.7); }
+.dr-step-dot { height: 5px; background: rgba(var(--ink-rgb), 0.12); transition: background 0.5s ease; }
+.dr-step-dot.done, .dr-step-dot.active { box-shadow: 0 0 14px -2px rgba(16,185,129,0.8); }
+
+/* contract preview — keep body text maximally legible */
+.dr-section { background: var(--vx-fill); border-color: var(--vx-edge); border-radius: 18px; }
+.dr-section p, .dr-clause-text { line-height: 1.7; }
+.dr-clause-row { border-color: var(--vx-edge); border-radius: 16px; overflow: hidden; }
+.dr-clause-legal { border-right-color: var(--vx-edge-soft); }
+.dr-risk-card, .dr-fairness-wrap, .dr-sign-card, .dr-activity-list, .dr-version-card { background: var(--vx-fill); border-color: var(--vx-edge); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); border-radius: 18px; }
+.dr-breakdown-bar { background: rgba(var(--ink-rgb), 0.10); }
+.dr-breakdown-fill { box-shadow: 0 0 14px -2px rgba(16,185,129,0.8); }
+.dr-version-card { transition: transform 0.4s var(--vx-ease), border-color 0.3s ease; }
+.dr-version-item:hover .dr-version-card { transform: translateX(4px); border-color: var(--vx-edge-hover); }
+.dr-version-timeline::before { background: linear-gradient(180deg, var(--primary), var(--cyan), transparent); box-shadow: 0 0 12px rgba(16,185,129,0.5); }
+
+/* Deal Room dashboard */
+.deal-stat { background: var(--vx-fill); }
+.deal-stat-num { font-family: 'Sora', sans-serif; letter-spacing: -0.04em; font-size: 32px; }
+.deal-dash-card { border-radius: 24px; }
+.deal-dash-card::before { height: 3px; box-shadow: 0 0 18px 1px var(--accent); }
+:root:root .deal-dash-card:hover {
+  transform: translateY(-6px); border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: var(--vx-shadow), 0 34px 70px -34px var(--accent);
+}
+.deal-dash-title { font-family: 'Sora', sans-serif; letter-spacing: -0.02em; }
+.deal-dash-bottom { border-top-color: var(--vx-edge-soft); }
+.deal-filters .field-input { min-height: 44px; }
+.deal-group-count { background: var(--vx-field); border-color: var(--vx-edge); }
+
+/* ==========================================================================
+   Sections
+     14  Landing page (index.html — content unchanged, design only)
+     15  Auth pages
+     16  Page loader
+     17  Choreographed motion
+     18  Responsive
+     19  Touch devices
+     20  Reduced motion + low-power ("lite") mode
+   ========================================================================== */
+
+/* ==========================================================================
+   14. Landing page
+   ========================================================================== */
+section { padding: clamp(80px, 10vw, 130px) 0; }
+
+.hero { padding-top: 112px; }
+.hero h1 {
+  font-size: clamp(40px, 6.4vw, 86px); line-height: 1.02; letter-spacing: -0.045em; font-weight: 800;
+  margin-bottom: 26px;
+}
+.hero p.lead { font-size: clamp(16px, 1.5vw, 19px); max-width: 520px; color: rgba(var(--ink-rgb), 0.72); margin-bottom: 38px; }
+.hero-actions .btn { padding: 16px 30px; font-size: 15.5px; }
+.hero-actions .btn-sm { padding: 12px 20px; }
+
+/* orb → glass sphere with orbiting satellites */
+.hero-orb-wrap::before {
+  content: ''; position: absolute; width: 130%; height: 130%; left: -15%; top: -15%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(6,182,212,0.14), rgba(139,92,246,0.08) 55%, transparent);
+}
+:root:root .hero-orb {
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255,255,255,0.26), rgba(255,255,255,0) 30%),
+    radial-gradient(circle at 74% 80%, rgba(139,92,246,0.38), transparent 56%),
+    radial-gradient(circle at 42% 42%, rgba(16,185,129,0.40), rgba(6,182,212,0.16) 56%, transparent 78%);
+  border: 1px solid rgba(var(--ink-rgb), 0.16);
+  box-shadow: inset 0 0 70px rgba(6,182,212,0.20), inset 0 2px 1px rgba(255,255,255,0.22), 0 40px 130px -24px rgba(16,185,129,0.55);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+:root[data-theme="light"] .hero-orb { box-shadow: inset 0 0 60px rgba(6,182,212,0.18), inset 0 2px 1px rgba(255,255,255,0.9), 0 30px 90px -20px rgba(5,150,105,0.35); }
+.orb-ring { border-color: rgba(6,182,212,0.26); }
+.orb-ring::after {
+  content: ''; position: absolute; top: -4px; left: 50%; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%;
+  background: #22D3EE; box-shadow: 0 0 16px 2px rgba(34,211,238,0.9);
+}
+.orb-ring-2 { border-color: rgba(139,92,246,0.24); }
+.orb-ring-2::after { background: #A78BFA; box-shadow: 0 0 16px 2px rgba(167,139,250,0.9); top: auto; bottom: -4px; }
+
+.section-tag {
+  display: inline-flex; align-items: center; gap: 9px; width: fit-content;
+  padding: 7px 15px; border-radius: 999px; margin-bottom: 20px;
+  font-size: 11.5px; letter-spacing: 0.14em;
+  color: var(--primary); background: rgba(16,185,129,0.08); border: 1px solid rgba(52,211,153,0.28);
+  -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm);
+}
+.section-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
+#guardian .section-tag { color: var(--violet-text); background: rgba(139,92,246,0.10); border-color: rgba(167,139,250,0.32); }
+.section-heading { font-size: clamp(30px, 4.2vw, 54px); line-height: 1.07; letter-spacing: -0.04em; max-width: 760px; margin-bottom: 18px; }
+.section-sub { font-size: clamp(15px, 1.3vw, 17.5px); max-width: 600px; }
+
+.problem-card { padding: 38px 30px; }
+.problem-card .num {
+  font-size: 46px; font-weight: 700; letter-spacing: -0.06em; line-height: 1;
+  background: linear-gradient(180deg, rgba(var(--ink-rgb), 0.38), rgba(var(--ink-rgb), 0));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.ecosystem-card { padding: 42px 34px; }
+.ecosystem-card.builder  { --vx-light-rgb: 129, 140, 248; }
+.ecosystem-card.investor { --vx-light-rgb: 96, 165, 250; }
+.ecosystem-card.company  { --vx-light-rgb: 251, 191, 36; }
+
+.timeline::before { top: 27px; height: 2px; background: linear-gradient(90deg, transparent, rgba(52,211,153,0.5) 15%, rgba(6,182,212,0.5) 85%, transparent); box-shadow: 0 0 14px rgba(16,185,129,0.35); }
+.timeline-step .step-dot {
+  background: var(--vx-fill-strong); border-color: var(--vx-edge);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 14px 34px -14px rgba(16,185,129,0.6);
+}
+.timeline-step:hover .step-dot { transform: translateY(-3px); border-color: var(--vx-edge-hover); box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 0 30px rgba(16,185,129,0.5); }
+.timeline-step .step-dot { transition: transform 0.5s var(--vx-ease), border-color 0.4s ease, box-shadow 0.5s ease; }
+
+.mock-upload-card { padding: 30px; border-radius: var(--radius-lg); }
+.mock-upload-card .mock-preview { background: radial-gradient(70% 90% at 30% 0%, rgba(16,185,129,0.14), transparent 70%), var(--vx-field); border-color: rgba(var(--ink-rgb), 0.2); }
+
+/* VISION AI section = the AI identity (violet / blue) */
+:root:root .guardian-panel {
+  border-radius: 36px; padding: clamp(30px, 5vw, 72px);
+  border-color: rgba(167,139,250,0.30);
+  background:
+    radial-gradient(70% 55% at 50% 0%, rgba(139,92,246,0.28), transparent 70%),
+    radial-gradient(45% 50% at 96% 100%, rgba(59,130,246,0.22), transparent 70%),
+    radial-gradient(40% 40% at 0% 100%, rgba(6,182,212,0.10), transparent 70%),
+    var(--vx-fill);
+}
+:root[data-theme="light"] .guardian-panel { background: radial-gradient(70% 55% at 50% 0%, rgba(139,92,246,0.20), transparent 70%), radial-gradient(45% 50% at 96% 100%, rgba(59,130,246,0.16), transparent 70%), var(--vx-fill); }
+.guardian-card { --vx-light-rgb: 139, 92, 246; border-radius: 22px; }
+:root:root .guardian-card:hover { transform: translateY(-6px); border-color: rgba(167,139,250,0.55); box-shadow: 0 24px 60px -26px rgba(124,92,246,0.75); }
+.guardian-card .icon-badge {
+  background: radial-gradient(circle at 30% 20%, rgba(139,92,246,0.38), rgba(99,102,241,0.08));
+  color: var(--violet-text); border-color: rgba(167,139,250,0.35);
+}
+
+:root:root .device {
+  background: var(--vx-fill-strong); border: 1px solid var(--vx-edge);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 40px 90px -30px rgba(0,0,0,0.7), 0 0 60px -30px rgba(6,182,212,0.5);
+  -webkit-backdrop-filter: var(--vx-blur-sm); backdrop-filter: var(--vx-blur-sm);
+}
+:root[data-theme="light"] .device { box-shadow: inset 0 1px 0 #fff, 0 30px 70px -26px rgba(40,60,110,0.4); }
+.device .screen { background: radial-gradient(80% 70% at 30% 0%, rgba(16,185,129,0.20), transparent 70%), radial-gradient(70% 70% at 100% 100%, rgba(139,92,246,0.22), transparent 70%), var(--device-screen); }
+.device.desktop { width: min(460px, 100%); }
+
+.cta-section::before {
+  content: ''; position: absolute; left: 50%; top: 50%; width: min(980px, 96vw); height: 560px; transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(16,185,129,0.20), rgba(6,182,212,0.09) 55%, transparent); pointer-events: none; z-index: -1;
+}
+.cta-section h2 { font-size: clamp(32px, 5.2vw, 66px); letter-spacing: -0.045em; line-height: 1.05; }
+.cta-logo { animation: float 6s ease-in-out infinite; filter: drop-shadow(0 0 40px rgba(16,185,129,0.65)); }
+.cta-actions .btn { padding: 16px 28px; }
+footer { border-top: 1px solid transparent; border-image: linear-gradient(90deg, transparent, var(--vx-edge), transparent) 1; }
+
+/* ==========================================================================
+   15. Auth pages
+   ========================================================================== */
+.auth-card { max-width: 440px; padding: 48px 44px; border-radius: 32px; box-shadow: var(--vx-shadow), 0 50px 120px -40px rgba(16,185,129,0.35); }
+.auth-card h2 { font-size: 30px; letter-spacing: -0.04em; }
+.auth-card .brand img { width: 40px; height: 40px; }
+.auth-links a, .auth-footer-text a { transition: color 0.3s ease, text-shadow 0.3s ease; }
+.auth-links a:hover, .auth-footer-text a:hover { text-decoration: none; text-shadow: 0 0 18px rgba(16,185,129,0.8); }
+.password-toggle { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; transition: color 0.3s ease; }
+.password-toggle:hover { color: var(--white); }
+:root:root .role-card.selected {
+  border-color: rgba(52,211,153,0.75);
+  background: radial-gradient(120% 90% at 50% 0%, rgba(16,185,129,0.22), transparent 70%), var(--vx-fill);
+  box-shadow: 0 0 0 1px rgba(52,211,153,0.35), 0 24px 54px -22px rgba(16,185,129,0.8);
+}
+.lang-picker-option { border-radius: 12px; background: var(--vx-field); }
+.signup-step.active { animation: vxStep 0.55s var(--vx-ease) both; }
+@keyframes vxStep { from { opacity: 0; transform: translateY(14px); } }
+
+/* ==========================================================================
+   16. Page loader — glass ring with a travelling light
+   ========================================================================== */
+.page-loader { background: radial-gradient(60% 50% at 50% 45%, rgba(16,185,129,0.14), transparent 70%), var(--bg); transition: opacity 0.7s ease, visibility 0.7s ease; }
+:root:root .loader-orb {
+  width: 68px; height: 68px; border: 0;
+  background: conic-gradient(from 0deg, transparent 0 28%, #10B981, #06B6D4, #3B82F6 82%, transparent);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  filter: drop-shadow(0 0 14px rgba(16,185,129,0.65));
+  animation: spin 1s linear infinite;
+}
+
+/* ==========================================================================
+   17. Choreographed motion
+   ========================================================================== */
+@keyframes vxRise { from { opacity: 0; transform: translate3d(0, 22px, 0); } }
+@keyframes vxScaleIn { from { opacity: 0; transform: scale(0.9); } }
+
+/* hero: staggered entrance */
+.hero-copy > * { animation: vxRise 0.9s var(--vx-ease) backwards; }
+.hero-copy > :nth-child(2) { animation-delay: 0.10s; }
+.hero-copy > :nth-child(3) { animation-delay: 0.20s; }
+.hero-orb-wrap { animation: vxScaleIn 1.2s var(--vx-ease) 0.15s backwards; }
+
+/* dashboards: sections rise in sequence */
+.dash-main > .dash-topbar, .dash-main > .welcome-block, .dash-main > .stat-grid, .dash-main > .panel-head,
+.dash-main > .filter-row, .dash-main > .deal-stats, .dash-main > .deal-filters, .dash-main > .profile-hero,
+.dash-main > .messages-shell, .dash-main > .badge-guide-grid, .dash-main > .empty-state, .dash-main > .request-list,
+.dash-main > .rank-progress-card, .dash-main > .deal-group-head, .dash-main > .deal-dash-grid, .dash-main > .dr-empty,
+.dash-main > .project-grid {
+  animation: vxRise 0.8s var(--vx-ease) backwards;
+}
+.dash-main > :nth-child(2) { animation-delay: 0.05s; }
+.dash-main > :nth-child(3) { animation-delay: 0.10s; }
+.dash-main > :nth-child(4) { animation-delay: 0.15s; }
+.dash-main > :nth-child(5) { animation-delay: 0.20s; }
+.dash-main > :nth-child(6) { animation-delay: 0.25s; }
+.dash-main > :nth-child(n+7) { animation-delay: 0.30s; }
+
+/* cards inside grids: staggered reveal */
+.project-grid > *, .stat-grid > *, .deal-dash-grid > *, .deal-stats > *, .badge-guide-grid > *, .request-list > * { animation: vxRise 0.75s var(--vx-ease) backwards; }
+.project-grid > :nth-child(1), .stat-grid > :nth-child(1), .deal-dash-grid > :nth-child(1), .deal-stats > :nth-child(1), .badge-guide-grid > :nth-child(1) { animation-delay: 0.10s; }
+.project-grid > :nth-child(2), .stat-grid > :nth-child(2), .deal-dash-grid > :nth-child(2), .deal-stats > :nth-child(2), .badge-guide-grid > :nth-child(2) { animation-delay: 0.17s; }
+.project-grid > :nth-child(3), .stat-grid > :nth-child(3), .deal-dash-grid > :nth-child(3), .deal-stats > :nth-child(3), .badge-guide-grid > :nth-child(3) { animation-delay: 0.24s; }
+.project-grid > :nth-child(4), .stat-grid > :nth-child(4), .deal-dash-grid > :nth-child(4), .deal-stats > :nth-child(4) { animation-delay: 0.31s; }
+.project-grid > :nth-child(5), .deal-dash-grid > :nth-child(5) { animation-delay: 0.38s; }
+.project-grid > :nth-child(6), .deal-dash-grid > :nth-child(6) { animation-delay: 0.45s; }
+.project-grid > :nth-child(n+7), .deal-dash-grid > :nth-child(n+7) { animation-delay: 0.52s; }
+
+/* legacy scroll-reveal: gentler travel, same hooks (main.js adds .is-visible) */
+.reveal { transform: translateY(32px); transition-duration: 0.95s; }
+.reveal-scale { transition: opacity 0.9s var(--vx-ease), transform 0.9s var(--vx-ease); }
+.reveal-left, .reveal-right { transition: opacity 0.9s var(--vx-ease), transform 0.9s var(--vx-ease); }
+
+/* background animation pauses when the tab is hidden (cinematic.js toggles .vx-paused) */
+html.vx-paused .vx-aurora, html.vx-paused .vx-aurora-b, html.vx-paused .orb-ring, html.vx-paused .hero-orb, html.vx-paused .device { animation-play-state: paused; }
+
+/* ==========================================================================
+   18. Responsive
+   ========================================================================== */
+html, body { max-width: 100%; }
+.project-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.deal-dash-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.vision-ai-card .md-table, .message-bubble-content .md-table, .vai-compare-table, .vision-ai-msg-content .md-table { display: block; max-width: 100%; overflow-x: auto; }
+.dr-section p, .dr-contract-title, .dr-clause-text { overflow-wrap: anywhere; }
+
+@media (max-width: 1024px) {
+  .hero { padding-top: 104px; }
+  .hero-orb { width: 280px; height: 280px; }
+  .orb-ring-1 { width: 350px; height: 350px; }
+  .orb-ring-2 { width: 400px; height: 400px; }
+  .hero-actions .btn { padding: 15px 26px; }
+}
+
+@media (max-width: 768px) {
+  .navbar .container { width: calc(100% - 20px); padding: 8px 10px 8px 16px; border-radius: 18px; }
+  .navbar { padding: 10px 0; }
+
+  :root:root .sidebar { border-radius: 0 28px 28px 0; border-left: 0; }
+  .sidebar-mobile-head { margin-bottom: 18px; }
+  .dash-main { padding: 20px 16px 120px; }
+  .dash-topbar { gap: 12px; margin-bottom: 22px; }
+  .search-bar { max-width: none; order: 3; min-width: 100%; }
+  .welcome-block h2 { font-size: 28px; }
+
+  /* floating glass tab bar */
+  :root:root .bottom-nav {
+    left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); padding: 6px;
+    border: 1px solid var(--vx-edge); border-radius: 24px;
+    background: var(--vx-bar-solid); box-shadow: var(--vx-shadow), 0 20px 50px -20px rgba(0,0,0,0.6);
+    -webkit-backdrop-filter: var(--vx-blur); backdrop-filter: var(--vx-blur);
+  }
+  .bottom-nav a { flex: 1; min-height: 52px; justify-content: center; border-radius: 18px; transition: background 0.35s ease, color 0.35s ease; }
+  .bottom-nav a.active { color: var(--white); background: linear-gradient(135deg, rgba(16,185,129,0.26), rgba(6,182,212,0.14)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.14); }
+  .bottom-nav a.active .icon { color: var(--primary); filter: drop-shadow(0 0 6px rgba(16,185,129,0.8)); }
+  .mobile-fab-create { bottom: 98px; left: 16px; }
+  .vision-ai-fab { bottom: 98px; right: 16px; width: 54px; height: 54px; }
+
+  .btn { min-height: 46px; }
+  .btn-sm { min-height: 42px; }
+  .icon-btn { width: 44px; height: 44px; }
+  .project-card-manage { flex-wrap: wrap; }
+
+  .modal-overlay, .dr-modal-overlay, .forward-modal-overlay { padding: 12px; align-items: flex-end; }
+  .modal-box { max-height: 92vh; border-radius: 26px 26px 20px 20px; }
+  .dr-modal { padding: 20px; max-height: 92vh; border-radius: 26px 26px 20px 20px; }
+  .modal-body { padding: 20px; }
+  .modal-header { padding: 18px 20px; }
+  .dr-form-grid, .dr-risk-grid { grid-template-columns: 1fr; }
+  .dr-clause-row { grid-template-columns: 1fr; }
+  .dr-clause-legal { border-right: 0; border-bottom: 1px solid var(--vx-edge-soft); }
+  .dr-actions .dr-actions-danger { margin-left: 0; }
+  .dr-actions .btn { flex: 1 1 calc(50% - 8px); }
+  .dr-status-card { padding: 20px 18px 20px 24px; }
+  .deal-filters .deal-search, .deal-filters select { flex: 1 1 100%; max-width: none; }
+  .message-bubble { max-width: 84%; }
+  .chat-side-panel { max-width: 100%; }
+
+  .auth-card { padding: 36px 24px; border-radius: 28px; }
+  .guardian-grid { gap: 14px; }
+  .cta-section h2 { font-size: clamp(30px, 8vw, 44px); }
+}
+
+@media (max-width: 480px) {
+  .navbar .container { padding: 8px 8px 8px 14px; }
+  .nav-actions .btn-sm { padding: 9px 14px; }
+  .hero h1 { font-size: clamp(36px, 11vw, 48px); }
+  .hero-orb { width: 230px; height: 230px; }
+  .hero-orb-wrap { height: 320px; }
+  .orb-ring-1 { width: 290px; height: 290px; }
+  .orb-ring-2 { width: 330px; height: 330px; }
+  .stat-card .stat-value { font-size: 30px; }
+  .profile-hero { padding: 24px 20px; }
+  .vision-ai-panel .vision-ai-header { padding: 20px 18px 14px; }
+  .dr-actions .btn { flex: 1 1 100%; }
+}
+
+/* ==========================================================================
+   19. Touch devices — no hover, so the liquid rests filled and sloshes on press
+   ========================================================================== */
+@media (hover: none) {
+  .btn-primary:not(:disabled):not([aria-busy="true"]):not(.is-loading)::before,
+  .btn-primary:not(:disabled):not([aria-busy="true"]):not(.is-loading)::after { transform: translate3d(0, -15px, 0); }
+  .btn-primary:not(:disabled):not([aria-busy="true"]):not(.is-loading):active::after { transform: translate3d(0, 24%, 0); animation-play-state: running, running; }
+  .btn-primary:not(:disabled):not([aria-busy="true"]):not(.is-loading):active::before { transform: translate3d(0, 14%, 0); animation-play-state: running, running; }
+  :root:root .btn-primary:not(:disabled):not([aria-busy="true"]):not(.is-loading) {
+    color: var(--vx-wave-text); border-color: rgba(255,255,255,0.28);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 12px 30px -12px rgba(6,182,212,0.6);
+  }
+  :root:root .project-card, :root:root .project-card:hover { transform: none; --lift: 0px; }
+  .project-card::after, .project-card::before { display: none; }
+  .side-link:hover { transform: none; }
+  :root:root .problem-card:hover, :root:root .ecosystem-card:hover, :root:root .stat-card:hover,
+  :root:root .guardian-card:hover, :root:root .deal-dash-card:hover, :root:root .role-card:hover { transform: none; }
+  .vx-spot { display: none; }
+}
+
+/* ==========================================================================
+   20. Reduced motion + low-power mode
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important;
+    transition-duration: 0.01ms !important; transition-delay: 0s !important; scroll-behavior: auto !important;
+  }
+  .reveal, .reveal-scale, .reveal-left, .reveal-right { opacity: 1 !important; transform: none !important; }
+  :root:root .project-card { transform: none; }
+  :root:root .loader-orb { animation-duration: 1.6s !important; animation-iteration-count: infinite !important; }
+  .vx-spot { display: none; }
+}
+
+/* cinematic.js adds .vx-lite on slow / low-memory devices: keep the look, drop the expensive parts */
+:root.vx-lite { --vx-panel: rgba(10, 14, 26, 0.95); --vx-bar: rgba(10, 14, 26, 0.92); --vx-bar-solid: rgba(10, 14, 26, 0.96); --card: rgba(13, 18, 32, 0.97); }
+:root[data-theme="light"].vx-lite { --vx-panel: rgba(255,255,255,0.96); --vx-bar: rgba(255,255,255,0.92); --vx-bar-solid: rgba(255,255,255,0.97); --card: rgba(255,255,255,0.97); }
+:root.vx-lite .vx-aurora, :root.vx-lite .vx-aurora-b { animation: none; }
+:root.vx-lite .vx-spot { display: none; }
+:root.vx-lite *, :root.vx-lite *::before, :root.vx-lite *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+:root.vx-lite .project-card::after { display: none; }
+:root.vx-lite .vision-ai-header::before { filter: none; }
